@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kidsy School Management - Mobile App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .mobile-container {
+            max-width: 375px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .menu-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .menu-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .menu-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .info-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .language-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .language-btn:hover {
+            background: #1565c0;
+        }
+
+        @media (max-width: 400px) {
+            .mobile-container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-switcher">
+        <button class="language-btn" onclick="changeLanguage('en')">EN</button>
+        <button class="language-btn" onclick="changeLanguage('hi')">हिं</button>
+        <button class="language-btn" onclick="changeLanguage('te')">తె</button>
+        <button class="language-btn" onclick="changeLanguage('ta')">த</button>
+    </div>
+
+    <div class="mobile-container">
+        <div class="header">
+            <h1 id="app-title">Kidsy School Management</h1>
+            <p id="app-subtitle">Mobile App</p>
+        </div>
+
+        <div class="content">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number">150</div>
+                    <div class="stat-label" id="total-students">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">₹45,000</div>
+                    <div class="stat-label" id="total-fees">Total Fees</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">85%</div>
+                    <div class="stat-label" id="payment-rate">Payment Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label" id="pending">Pending</div>
+                </div>
+            </div>
+
+            <div class="menu-container">
+                <div class="menu-item" onclick="showScreen('dashboard')">
+                    <span class="menu-icon">📊</span>
+                    <div class="menu-title" id="dashboard">Dashboard</div>
+                </div>
+                <div class="menu-item" onclick="showScreen('students')">
+                    <span class="menu-icon">👥</span>
+                    <div class="menu-title" id="students">Students</div>
+                </div>
+                <div class="menu-item" onclick="showScreen('fees')">
+                    <span class="menu-icon">💰</span>
+                    <div class="menu-title" id="fees">Fees</div>
+                </div>
+                <div class="menu-item" onclick="showScreen('payments')">
+                    <span class="menu-icon">💳</span>
+                    <div class="menu-title" id="payments">Payments</div>
+                </div>
+                <div class="menu-item" onclick="showScreen('reports')">
+                    <span class="menu-icon">📈</span>
+                    <div class="menu-title" id="reports">Reports</div>
+                </div>
+                <div class="menu-item" onclick="showScreen('settings')">
+                    <span class="menu-icon">⚙️</span>
+                    <div class="menu-title" id="settings">Settings</div>
+                </div>
+            </div>
+
+            <div class="info-container">
+                <div class="info-title">🎉 Welcome to Kidsy School!</div>
+                <div class="info-text" id="welcome-text">
+                    This is your complete school management mobile app. 
+                    Manage students, fees, payments, and generate reports 
+                    all from your mobile device.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                'app-title': 'Kidsy School Management',
+                'app-subtitle': 'Mobile App',
+                'total-students': 'Total Students',
+                'total-fees': 'Total Fees',
+                'payment-rate': 'Payment Rate',
+                'pending': 'Pending',
+                'dashboard': 'Dashboard',
+                'students': 'Students',
+                'fees': 'Fees',
+                'payments': 'Payments',
+                'reports': 'Reports',
+                'settings': 'Settings',
+                'welcome-text': 'This is your complete school management mobile app. Manage students, fees, payments, and generate reports all from your mobile device.'
+            },
+            hi: {
+                'app-title': 'किड्सी स्कूल प्रबंधन',
+                'app-subtitle': 'मोबाइल ऐप',
+                'total-students': 'कुल छात्र',
+                'total-fees': 'कुल फीस',
+                'payment-rate': 'भुगतान दर',
+                'pending': 'लंबित',
+                'dashboard': 'डैशबोर्ड',
+                'students': 'छात्र',
+                'fees': 'फीस',
+                'payments': 'भुगतान',
+                'reports': 'रिपोर्ट',
+                'settings': 'सेटिंग्स',
+                'welcome-text': 'यह आपका पूर्ण स्कूल प्रबंधन मोबाइल ऐप है। छात्रों, फीस, भुगतान का प्रबंधन करें और रिपोर्ट तैयार करें।'
+            },
+            te: {
+                'app-title': 'కిడ్సీ స్కూల్ మేనేజ్‌మెంట్',
+                'app-subtitle': 'మొబైల్ యాప్',
+                'total-students': 'మొత్తం విద్యార్థులు',
+                'total-fees': 'మొత్తం ఫీజు',
+                'payment-rate': 'చెల్లింపు రేటు',
+                'pending': 'పెండింగ్',
+                'dashboard': 'డాష్‌బోర్డ్',
+                'students': 'విద్యార్థులు',
+                'fees': 'ఫీజు',
+                'payments': 'చెల్లింపులు',
+                'reports': 'రిపోర్ట్లు',
+                'settings': 'సెట్టింగ్‌లు',
+                'welcome-text': 'ఇది మీ పూర్తి స్కూల్ మేనేజ్‌మెంట్ మొబైల్ యాప్. విద్యార్థులు, ఫీజు, చెల్లింపులను నిర్వహించండి.'
+            },
+            ta: {
+                'app-title': 'கிட்ஸி பள்ளி மேலாண்மை',
+                'app-subtitle': 'மொபைல் செயலி',
+                'total-students': 'மொத்த மாணவர்கள்',
+                'total-fees': 'மொத்த கட்டணம்',
+                'payment-rate': 'கட்டண விகிதம்',
+                'pending': 'நிலுவையில்',
+                'dashboard': 'டாஷ்போர்டு',
+                'students': 'மாணவர்கள்',
+                'fees': 'கட்டணம்',
+                'payments': 'கட்டணங்கள்',
+                'reports': 'அறிக்கைகள்',
+                'settings': 'அமைப்புகள்',
+                'welcome-text': 'இது உங்கள் முழுமையான பள்ளி மேலாண்மை மொபைல் செயலி. மாணவர்கள், கட்டணம், கட்டணங்களை நிர்வகிக்கவும்.'
+            }
+        };
+
+        function changeLanguage(lang) {
+            const elements = translations[lang];
+            for (const [key, value] of Object.entries(elements)) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+        }
+
+        function showScreen(screen) {
+            alert(`Opening ${screen} screen...`);
+        }
+
+        // Initialize with English
+        changeLanguage('en');
+    </script>
+</body>
+</html> 

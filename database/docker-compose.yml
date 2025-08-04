@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: school_fee_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: school_fee_register
+      MYSQL_USER: schooluser
+      MYSQL_PASSWORD: schoolpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./sample_data.sql:/docker-entrypoint-initdb.d/02-sample_data.sql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - school_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: school_fee_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+    ports:
+      - "8087:80"
+    depends_on:
+      - mysql
+    networks:
+      - school_network
+
+volumes:
+  mysql_data:
+
+networks:
+  school_network:
+    driver: bridge 

@@ -1,0 +1,178 @@
+/* Vibrant skyblue gradient background */
+.login-bg {
+  min-height: 100vh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Static SVGs */
+.cloud {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.7;
+}
+.cloud1 { top: 10%; left: 5%; }
+.cloud2 { top: 20%; right: 10%; }
+
+.sun {
+  position: absolute;
+  top: 5%; right: 20%;
+  z-index: 1;
+}
+
+.star {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.8;
+}
+.star1 { top: 30%; left: 20%; }
+.star2 { bottom: 20%; right: 15%; }
+
+.rocket {
+  position: absolute;
+  top: 15%; left: 10%;
+  z-index: 1;
+}
+
+.astronomer {
+  position: absolute;
+  bottom: 15%; right: 10%;
+  z-index: 1;
+}
+
+.planet {
+  position: absolute;
+  bottom: 25%; left: 15%;
+  z-index: 1;
+}
+
+.tree {
+  position: absolute;
+  z-index: 1;
+}
+.tree1 { bottom: 5%; left: 5%; }
+.tree2 { bottom: 8%; right: 25%; }
+
+.bird {
+  position: absolute;
+  z-index: 1;
+}
+.bird1 { top: 20%; left: 35%; }
+.bird2 { top: 30%; left: 45%; }
+
+.flower {
+  position: absolute;
+  z-index: 1;
+}
+.flower1 { bottom: 12%; left: 30%; }
+.flower2 { bottom: 15%; right: 35%; }
+
+.butterfly {
+  position: absolute;
+  top: 50%; left: 20%;
+  z-index: 1;
+}
+
+.rainbow {
+  position: absolute;
+  top: 8%; left: 20%;
+  z-index: 1;
+}
+
+.mascot {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.login-form-container {
+  position: relative;
+  z-index: 3;
+  background: rgba(255,255,255,0.95);
+  border-radius: 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  padding: 2.5rem 2rem 2rem 2rem;
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-title {
+  font-family: 'Fredoka One', 'Baloo 2', 'Comic Sans MS', cursive, sans-serif;
+  font-size: 2.5rem;
+  color: #4682B4;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+.brand {
+  color: #ff6b35;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #fff, 2px 2px 4px rgba(255, 107, 53, 0.3);
+}
+.login-subtitle {
+  font-family: 'Baloo 2', 'Fredoka One', 'Comic Sans MS', cursive, sans-serif;
+  color: #555;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Enhanced button styles for skyblue theme */
+.login-button {
+  background: linear-gradient(45deg, #87CEEB, #4682B4) !important;
+  color: white !important;
+  border-radius: 2rem !important;
+  padding: 12px 32px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  font-size: 1rem !important;
+  box-shadow: 0 8px 25px rgba(135, 206, 235, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-button:hover {
+  background: linear-gradient(45deg, #4682B4, #357ABD) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 35px rgba(135, 206, 235, 0.4) !important;
+}
+
+/* Input field enhancements */
+.login-input {
+  border-radius: 1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-input:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.login-input:focus {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(135, 206, 235, 0.2) !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .login-form-container {
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+    max-width: 98vw;
+  }
+  .mascot {
+    display: none;
+  }
+  .rocket, .astronomer, .planet, .tree, .bird, .flower, .butterfly, .rainbow {
+    transform: scale(0.7);
+  }
+}
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Fredoka+One&display=swap'); 

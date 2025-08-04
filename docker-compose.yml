@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: school-fee-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: school_fee_register
+      MYSQL_USER: schooluser
+      MYSQL_PASSWORD: schoolpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - school-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Eureka Server
+  eureka-server:
+    build:
+      context: ./backend/eureka-server
+      dockerfile: Dockerfile
+    container_name: school-fee-eureka
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - school-network
+    depends_on:
+      - mysql
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: school-fee-auth
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Gateway Service
+  gateway-service:
+    build:
+      context: ./backend/gateway-service
+      dockerfile: Dockerfile
+    container_name: school-fee-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Student Service
+  student-service:
+    build:
+      context: ./backend/student-service
+      dockerfile: Dockerfile
+    container_name: school-fee-student
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Fee Service
+  fee-service:
+    build:
+      context: ./backend/fee-service
+      dockerfile: Dockerfile
+    container_name: school-fee-fee
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Payment Service
+  payment-service:
+    build:
+      context: ./backend/payment-service
+      dockerfile: Dockerfile
+    container_name: school-fee-payment
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    container_name: school-fee-notification
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Reporting Service
+  reporting-service:
+    build:
+      context: ./backend/reporting-service
+      dockerfile: Dockerfile
+    container_name: school-fee-reporting
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_fee_register
+      SPRING_DATASOURCE_USERNAME: schooluser
+      SPRING_DATASOURCE_PASSWORD: schoolpass
+    networks:
+      - school-network
+    depends_on:
+      - eureka-server
+      - mysql
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: school-fee-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_BASE_URL: http://localhost:8080
+    networks:
+      - school-network
+    depends_on:
+      - gateway-service
+
+volumes:
+  mysql_data:
+
+networks:
+  school-network:
+    driver: bridge 

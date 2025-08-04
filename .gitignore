@@ -1,0 +1,16 @@
+# Java build files
+target/
+*.jar
+
+# Node build/cache
+node_modules/
+.cache/
+*.pack
+
+# IDE files
+.idea/
+*.iml
+
+# OS junk
+.DS_Store
+Thumbs.db
