@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/students")
@@ -107,6 +108,46 @@ public class StudentController {
     public ResponseEntity<Void> activateStudent(@PathVariable Long id) {
         studentService.activateStudent(id);
         return ResponseEntity.ok().build();
+    }
+
+    // New endpoints for frontend compatibility
+    @GetMapping("/subjects")
+    public ResponseEntity<List<Object>> getSubjects() {
+        try {
+            // Return mock data for now - this should be replaced with actual subject service
+            List<Object> subjects = List.of(
+                Map.of("id", 1, "name", "Mathematics"),
+                Map.of("id", 2, "name", "Science"),
+                Map.of("id", 3, "name", "English"),
+                Map.of("id", 4, "name", "History"),
+                Map.of("id", 5, "name", "Geography")
+            );
+            return ResponseEntity.ok(subjects);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/classes")
+    public ResponseEntity<List<Object>> getClasses() {
+        try {
+            // Return mock data for now - this should be replaced with actual class service
+            List<Object> classes = List.of(
+                Map.of("id", 1, "name", "Class 1"),
+                Map.of("id", 2, "name", "Class 2"),
+                Map.of("id", 3, "name", "Class 3"),
+                Map.of("id", 4, "name", "Class 4"),
+                Map.of("id", 5, "name", "Class 5"),
+                Map.of("id", 6, "name", "Class 6"),
+                Map.of("id", 7, "name", "Class 7"),
+                Map.of("id", 8, "name", "Class 8"),
+                Map.of("id", 9, "name", "Class 9"),
+                Map.of("id", 10, "name", "Class 10")
+            );
+            return ResponseEntity.ok(classes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // Health check endpoint

@@ -65,6 +65,7 @@ import Timetable from './components/Timetable';
 import HelpDesk from './components/HelpDesk';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import MobileOptimizer from './components/MobileOptimizer';
+import SharedComponentsTest from './pages/SharedComponentsTest';
 
 const drawerWidth = 240;
 
@@ -246,6 +247,12 @@ const AppContent: React.FC = () => {
       icon: <SupportIcon />,
       path: '/help-desk',
       roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'PARENT']
+    },
+    {
+      text: 'Shared Components Test',
+      icon: <SettingsIcon />,
+      path: '/shared-components-test',
+      roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'TEACHER', 'PARENT']
     }
   ];
 
@@ -591,6 +598,12 @@ const AppContent: React.FC = () => {
             <Route path="/help-desk" element={
               <ProtectedRoute>
                 <HelpDesk />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/shared-components-test" element={
+              <ProtectedRoute>
+                <SharedComponentsTest />
               </ProtectedRoute>
             } />
             

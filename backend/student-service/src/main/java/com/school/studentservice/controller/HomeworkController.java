@@ -103,6 +103,21 @@ public class HomeworkController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    /**
+     * Get homework for parent (based on their children's classes)
+     */
+    @GetMapping("/parent/{parentId}")
+    public ResponseEntity<List<HomeworkDTO>> getHomeworkForParent(@PathVariable Long parentId) {
+        try {
+            // This should be implemented to get homework for all classes where the parent has children
+            // For now, return empty list to prevent errors
+            List<HomeworkDTO> result = List.of();
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     
     /**
      * Get homework by subject
