@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/student_provider.dart';
+import '../../widgets/common/app_branding.dart';
 
 class MarksScreen extends StatefulWidget {
   const MarksScreen({super.key});
@@ -71,11 +69,9 @@ class _MarksScreenState extends State<MarksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
       appBar: AppBar(
         title: const Text('Student Marks'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -83,45 +79,6 @@ class _MarksScreenState extends State<MarksScreen> {
           onPressed: () => context.go('/dashboard'),
         ),
         actions: [
-          // Kidsy Branding in App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           IconButton(
             icon: const Icon(Icons.print),
             onPressed: () {
@@ -134,66 +91,77 @@ class _MarksScreenState extends State<MarksScreen> {
       ),
       body: Column(
         children: [
+          // App Branding for Mobile
+          const AppBranding(),
           // Filters
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.grey[50],
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
-                  // Mobile layout - stack vertically
-                  return Column(
-                    children: [
-                      _buildFilterDropdown('Class', _selectedClass, _classes, (value) {
-                        setState(() {
-                          _selectedClass = value ?? 'Class 10';
-                        });
-                      }),
-                      const SizedBox(height: 16),
-                      _buildFilterDropdown('Subject', _selectedSubject, _subjects, (value) {
-                        setState(() {
-                          _selectedSubject = value ?? 'All Subjects';
-                        });
-                      }),
-                      const SizedBox(height: 16),
-                      _buildFilterDropdown('Exam', _selectedExam, _exams, (value) {
-                        setState(() {
-                          _selectedExam = value ?? 'Mid Term';
-                        });
-                      }),
-                    ],
-                  );
-                } else {
-                  // Desktop layout - row
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildFilterDropdown('Class', _selectedClass, _classes, (value) {
-                          setState(() {
-                            _selectedClass = value ?? 'Class 10';
-                          });
-                        }),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildFilterDropdown('Subject', _selectedSubject, _subjects, (value) {
-                          setState(() {
-                            _selectedSubject = value ?? 'All Subjects';
-                          });
-                        }),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildFilterDropdown('Exam', _selectedExam, _exams, (value) {
-                          setState(() {
-                            _selectedExam = value ?? 'Mid Term';
-                          });
-                        }),
-                      ),
-                    ],
-                  );
-                }
-              },
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedClass,
+                    decoration: const InputDecoration(
+                      labelText: 'Class',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _classes.map((className) {
+                      return DropdownMenuItem(
+                        value: className,
+                        child: Text(className),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedClass = value ?? 'Class 10';
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedSubject,
+                    decoration: const InputDecoration(
+                      labelText: 'Subject',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _subjects.map((subject) {
+                      return DropdownMenuItem(
+                        value: subject,
+                        child: Text(subject),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedSubject = value ?? 'All Subjects';
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedExam,
+                    decoration: const InputDecoration(
+                      labelText: 'Exam',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _exams.map((exam) {
+                      return DropdownMenuItem(
+                        value: exam,
+                        child: Text(exam),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedExam = value ?? 'Mid Term';
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           
@@ -203,25 +171,6 @@ class _MarksScreenState extends State<MarksScreen> {
           ),
         ],
       ),
-
-    );
-  }
-
-  Widget _buildFilterDropdown(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      items: items.map((item) {
-        return DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
     );
   }
 
@@ -281,28 +230,10 @@ class _MarksScreenState extends State<MarksScreen> {
               ),
             ),
             subtitle: Text('Exam: $_selectedExam'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _getMarkIcon(examMark),
-                  color: _getMarkColor(examMark),
-                  size: 30,
-                ),
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    final userRole = authProvider.user?['role'] ?? 'Super Admin';
-                    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER') {
-                      return IconButton(
-                        icon: const Icon(Icons.edit, size: 20),
-                        onPressed: () => _showEditMarksDialog(subject, _selectedExam, examMark),
-                        tooltip: 'Edit Marks',
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
+            trailing: Icon(
+              _getMarkIcon(examMark),
+              color: _getMarkColor(examMark),
+              size: 30,
             ),
           ),
         );
@@ -359,407 +290,14 @@ class _MarksScreenState extends State<MarksScreen> {
               ),
             ),
             subtitle: Text('Subject: $_selectedSubject'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _getMarkIcon(mark),
-                  color: _getMarkColor(mark),
-                  size: 30,
-                ),
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    final userRole = authProvider.user?['role'] ?? 'Super Admin';
-                    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER') {
-                      return IconButton(
-                        icon: const Icon(Icons.edit, size: 20),
-                        onPressed: () => _showEditMarksDialog(_selectedSubject, exam, mark),
-                        tooltip: 'Edit Marks',
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
+            trailing: Icon(
+              _getMarkIcon(mark),
+              color: _getMarkColor(mark),
+              size: 30,
             ),
           ),
         );
       },
-    );
-  }
-
-  void _showAddMarksDialog() {
-    String selectedClass = _selectedClass;
-    String selectedSubject = _selectedSubject == 'All Subjects' ? 'Mathematics' : _selectedSubject;
-    String selectedExam = _selectedExam;
-    String selectedSection = 'A';
-    String? selectedStudent;
-    final marksController = TextEditingController();
-
-    // Available sections
-    final List<String> availableSections = ['A', 'B', 'C', 'D'];
-
-    // Get students for the selected class
-    final studentProvider = context.read<StudentProvider>();
-    final students = studentProvider.students.where((student) => 
-      student.className == selectedClass || 
-      student.className == selectedClass.replaceAll('Class ', '')
-    ).toList();
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-        title: const Text('Add New Marks'),
-                  content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Student selection dropdown
-              if (students.isNotEmpty) ...[
-                DropdownButtonFormField<String>(
-                  value: selectedStudent,
-                  decoration: const InputDecoration(
-                    labelText: 'Student Name *',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: students.map((student) {
-                    return DropdownMenuItem<String>(
-                      value: student.id,
-                      child: Text('${student.name} (${student.rollNumber})'),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedStudent = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a student';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-              DropdownButtonFormField<String>(
-                value: selectedClass,
-                decoration: const InputDecoration(
-                  labelText: 'Class *',
-                  border: OutlineInputBorder(),
-                ),
-                items: _classes.map((className) {
-                  return DropdownMenuItem(value: className, child: Text(className));
-                }).toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedClass = value!;
-                    selectedStudent = null; // Reset student when class changes
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedSection,
-                decoration: const InputDecoration(
-                  labelText: 'Section *',
-                  border: OutlineInputBorder(),
-                ),
-                items: availableSections.map((section) {
-                  return DropdownMenuItem(value: section, child: Text(section));
-                }).toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedSection = value!;
-                    selectedStudent = null; // Reset student when section changes
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                value: selectedSubject,
-                decoration: const InputDecoration(
-                  labelText: 'Subject *',
-                  border: OutlineInputBorder(),
-                ),
-                items: _subjects.where((subject) => subject != 'All Subjects').map((subject) {
-                  return DropdownMenuItem(value: subject, child: Text(subject));
-                }).toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedSubject = value!;
-                  });
-                },
-              ),
-            const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                value: selectedExam,
-                decoration: const InputDecoration(
-                  labelText: 'Exam *',
-                  border: OutlineInputBorder(),
-                ),
-                items: _exams.map((exam) {
-                  return DropdownMenuItem(value: exam, child: Text(exam));
-                }).toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedExam = value!;
-                  });
-                },
-              ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: marksController,
-              decoration: const InputDecoration(
-                labelText: 'Marks *',
-                hintText: 'Enter marks (0-100)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-                      ElevatedButton(
-              onPressed: () {
-                // Validate all required fields
-                if (selectedStudent == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please select a student'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                final marks = double.tryParse(marksController.text);
-                if (marks != null && marks >= 0 && marks <= 100) {
-                  setState(() {
-                    if (!_marksData.containsKey(selectedClass)) {
-                      _marksData[selectedClass] = {};
-                    }
-                    if (!_marksData[selectedClass]!.containsKey(selectedSubject)) {
-                      _marksData[selectedClass]![selectedSubject] = {};
-                    }
-                    _marksData[selectedClass]![selectedSubject]![selectedExam] = marks;
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Marks added successfully for student: $marks'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter valid marks between 0 and 100'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-                          child: const Text('Add'),
-          ),
-        ],
-        ),
-      ),
-    );
-  }
-
-  void _showBulkAddMarksDialog() {
-    String selectedClass = _selectedClass;
-    String selectedSubject = _selectedSubject == 'All Subjects' ? 'Mathematics' : _selectedSubject;
-    String selectedExam = _selectedExam;
-    final marksController = TextEditingController();
-
-    // Get students for the selected class
-    final studentProvider = context.read<StudentProvider>();
-    final students = studentProvider.students.where((student) => 
-      student.className == selectedClass || 
-      student.className == selectedClass.replaceAll('Class ', '')
-    ).toList();
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Bulk Add Marks'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Class: $selectedClass'),
-                Text('Students: ${students.length}'),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedSubject,
-                  decoration: const InputDecoration(
-                    labelText: 'Subject *',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _subjects.where((subject) => subject != 'All Subjects').map((subject) {
-                    return DropdownMenuItem(value: subject, child: Text(subject));
-                  }).toList(),
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedSubject = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedExam,
-                  decoration: const InputDecoration(
-                    labelText: 'Exam *',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _exams.map((exam) {
-                    return DropdownMenuItem(value: exam, child: Text(exam));
-                  }).toList(),
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedExam = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: marksController,
-                  decoration: const InputDecoration(
-                    labelText: 'Marks for All Students *',
-                    hintText: 'Enter marks (0-100)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Students in $selectedClass:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...students.take(5).map((student) => Text('• ${student.name} (${student.rollNumber})')),
-                      if (students.length > 5) Text('... and ${students.length - 5} more'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final marks = double.tryParse(marksController.text);
-                if (marks != null && marks >= 0 && marks <= 100) {
-                  setState(() {
-                    if (!_marksData.containsKey(selectedClass)) {
-                      _marksData[selectedClass] = {};
-                    }
-                    if (!_marksData[selectedClass]!.containsKey(selectedSubject)) {
-                      _marksData[selectedClass]![selectedSubject] = {};
-                    }
-                    _marksData[selectedClass]![selectedSubject]![selectedExam] = marks;
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Marks added successfully for ${students.length} students'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter valid marks between 0 and 100'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Add for All'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditMarksDialog(String subject, String exam, double currentMarks) {
-    final marksController = TextEditingController(text: currentMarks.toString());
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Marks'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Class: $_selectedClass'),
-            Text('Subject: $subject'),
-            Text('Exam: $exam'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: marksController,
-              decoration: const InputDecoration(
-                labelText: 'Marks',
-                hintText: 'Enter marks (0-100)',
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final marks = double.tryParse(marksController.text);
-              if (marks != null && marks >= 0 && marks <= 100) {
-                setState(() {
-                  _marksData[_selectedClass]![subject]![exam] = marks;
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Marks updated successfully: $marks')),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter valid marks between 0 and 100'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -777,22 +315,5 @@ class _MarksScreenState extends State<MarksScreen> {
     if (mark >= 70) return Icons.info;
     if (mark >= 60) return Icons.warning;
     return Icons.error;
-  }
-
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER') {
-      return FloatingActionButton(
-        onPressed: () => _showAddMarksDialog(),
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      );
-    }
-    return null;
-  }
-
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
   }
 }

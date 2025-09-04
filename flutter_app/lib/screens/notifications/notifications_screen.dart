@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../widgets/common/app_branding.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/notification_provider.dart';
-import '../../models/notification.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -13,68 +12,114 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  List<Map<String, dynamic>> _notifications = [];
   String _selectedFilter = 'All';
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _messageController = TextEditingController();
-  final _typeController = TextEditingController();
-  final _priorityController = TextEditingController();
-  final _targetAudienceController = TextEditingController();
 
   final List<String> _filters = ['All', 'Unread', 'Important', 'Academic', 'Fee', 'General'];
-  final List<String> _types = ['Announcement', 'Meeting', 'Event', 'Academic', 'Fee', 'General'];
-  final List<String> _priorities = ['Low', 'Normal', 'Medium', 'High', 'Urgent'];
-  final List<String> _audiences = ['All', 'Kids', 'Parents', 'Teachers', 'Administration'];
 
   @override
   void initState() {
     super.initState();
-    // Set default values
-    _typeController.text = _types[0];
-    _priorityController.text = _priorities[1];
-    _targetAudienceController.text = _audiences[0];
-    
-    // Load notifications from provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotificationProvider>().loadNotifications();
-    });
+    _loadNotifications();
   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _messageController.dispose();
-    _typeController.dispose();
-    _priorityController.dispose();
-    _targetAudienceController.dispose();
-    super.dispose();
+  void _loadNotifications() {
+    _notifications = [
+      {
+        'id': 1,
+        'title': 'Fee Payment Reminder',
+        'message': 'Your monthly fee payment is due on 31st January. Please ensure timely payment.',
+        'type': 'Fee',
+        'priority': 'Important',
+        'timestamp': DateTime.now().subtract(const Duration(hours: 2)),
+        'isRead': false,
+        'sender': 'Finance Department',
+      },
+      {
+        'id': 2,
+        'title': 'Parent-Teacher Meeting',
+        'message': 'Quarterly parent-teacher meeting scheduled for 25th January at 3:00 PM.',
+        'type': 'Academic',
+        'priority': 'Important',
+        'timestamp': DateTime.now().subtract(const Duration(hours: 4)),
+        'isRead': false,
+        'sender': 'School Administration',
+      },
+      {
+        'id': 3,
+        'title': 'Homework Assignment',
+        'message': 'New mathematics homework assigned. Due date: 28th January.',
+        'type': 'Academic',
+        'priority': 'Normal',
+        'timestamp': DateTime.now().subtract(const Duration(hours: 6)),
+        'isRead': true,
+        'sender': 'Mr. Johnson',
+      },
+      {
+        'id': 4,
+        'title': 'Sports Day Event',
+        'message': 'Annual Sports Day will be held on 15th February. All students must participate.',
+        'type': 'General',
+        'priority': 'Normal',
+        'timestamp': DateTime.now().subtract(const Duration(days: 1)),
+        'isRead': true,
+        'sender': 'Physical Education Department',
+      },
+      {
+        'id': 5,
+        'title': 'Library Book Return',
+        'message': 'Please return the borrowed library books by the end of this week.',
+        'type': 'Academic',
+        'priority': 'Normal',
+        'timestamp': DateTime.now().subtract(const Duration(days: 2)),
+        'isRead': true,
+        'sender': 'Library Staff',
+      },
+      {
+        'id': 6,
+        'title': 'Exam Schedule Update',
+        'message': 'Mid-term examination schedule has been updated. Check the notice board.',
+        'type': 'Academic',
+        'priority': 'Important',
+        'timestamp': DateTime.now().subtract(const Duration(days: 3)),
+        'isRead': false,
+        'sender': 'Examination Department',
+      },
+    ];
   }
 
-  List<NotificationModel> _getFilteredNotifications(List<NotificationModel> notifications) {
+  List<Map<String, dynamic>> get _filteredNotifications {
     if (_selectedFilter == 'All') {
-      return notifications;
+      return _notifications;
     } else if (_selectedFilter == 'Unread') {
-      return notifications.where((n) => !n.isRead).toList();
+      return _notifications.where((n) => !n['isRead']).toList();
     } else {
-      return notifications.where((n) => n.type == _selectedFilter).toList();
+      return _notifications.where((n) => n['type'] == _selectedFilter).toList();
     }
   }
 
-  void _markAsRead(String id) {
-    context.read<NotificationProvider>().markAsRead(id);
+  void _markAsRead(int id) {
+    setState(() {
+      final index = _notifications.indexWhere((n) => n['id'] == id);
+      if (index != -1) {
+        _notifications[index]['isRead'] = true;
+      }
+    });
   }
 
   void _markAllAsRead() {
-    context.read<NotificationProvider>().markAllAsRead();
+    setState(() {
+      for (var notification in _notifications) {
+        notification['isRead'] = true;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
       appBar: AppBar(
-        title: const Text('Announcements'),
+        title: const Text('Notifications'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -83,55 +128,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           onPressed: () => context.go('/dashboard'),
         ),
         actions: [
-          // Kidsy Branding in App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           Consumer<AuthProvider>(
             builder: (context, auth, _) {
               final role = auth.user?['role'] ?? 'Super Admin';
               return Row(
                 children: [
-                  if (role != 'Parent' && role != 'Teacher')
+                  if (role != 'Parent')
                     IconButton(
                       icon: const Icon(Icons.add),
                       onPressed: () => _showAddNotificationDialog(context),
-                      tooltip: 'Add Announcement',
+                      tooltip: 'Add Notification',
                     ),
                   IconButton(
                     icon: const Icon(Icons.done_all),
@@ -146,6 +152,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
       body: Column(
         children: [
+          // App Branding for Mobile
+          const AppBranding(),
           // Filter Bar
           Container(
             padding: const EdgeInsets.all(16),
@@ -179,51 +187,41 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           
           // Notifications List
           Expanded(
-            child: Consumer<NotificationProvider>(
-              builder: (context, notificationProvider, child) {
-                final filteredNotifications = _getFilteredNotifications(notificationProvider.notifications);
-                
-                if (filteredNotifications.isEmpty) {
-                  return const Center(
+            child: _filteredNotifications.isEmpty
+                ? const Center(
                     child: Text(
                       'No notifications found',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
-                  );
-                }
-                
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredNotifications.length,
-                  itemBuilder: (context, index) {
-                    final notification = filteredNotifications[index];
-                    return _buildNotificationCard(notification);
-                  },
-                );
-              },
-            ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filteredNotifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = _filteredNotifications[index];
+                      return _buildNotificationCard(notification);
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNotificationCard(NotificationModel notification) {
-    final isRead = notification.isRead;
-    final type = notification.type;
+  Widget _buildNotificationCard(Map<String, dynamic> notification) {
+    final isRead = notification['isRead'];
+    final priority = notification['priority'];
+    final type = notification['type'];
     
     MaterialColor priorityColor;
     IconData priorityIcon;
     
-    // Since NotificationModel doesn't have priority, we'll use type for color coding
-    switch (type) {
+    switch (priority) {
       case 'Important':
-      case 'Urgent':
         priorityColor = Colors.red;
         priorityIcon = Icons.priority_high;
         break;
       case 'Normal':
-      case 'General':
         priorityColor = Colors.blue;
         priorityIcon = Icons.info;
         break;
@@ -233,7 +231,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     return Card(
-      color: Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isRead ? 1 : 3,
       child: ListTile(
@@ -245,7 +242,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             Expanded(
               child: Text(
-                notification.title,
+                notification['title'],
                 style: TextStyle(
                   fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                   color: isRead ? Colors.grey[600] : Colors.black87,
@@ -267,18 +264,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(notification.message),
+            Text(notification['message']),
             const SizedBox(height: 8),
             Row(
               children: [
                 Chip(
                   label: Text(type),
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.grey[100],
                   labelStyle: const TextStyle(fontSize: 12),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _formatTimestamp(notification.createdAt),
+                  _formatTimestamp(notification['timestamp']),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -288,7 +285,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'From: ${notification.senderName}',
+              'From: ${notification['sender']}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],
@@ -330,10 +327,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               onSelected: (value) {
                 switch (value) {
                   case 'mark_read':
-                    _markAsRead(notification.id);
+                    _markAsRead(notification['id']);
                     break;
                   case 'delete':
-                    context.read<NotificationProvider>().deleteNotification(notification.id);
+                    setState(() {
+                      _notifications.removeWhere((n) => n['id'] == notification['id']);
+                    });
                     break;
                 }
               },
@@ -342,33 +341,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         onTap: () {
           if (!isRead) {
-            _markAsRead(notification.id);
+            _markAsRead(notification['id']);
           }
         },
       ),
     );
   }
 
-  String _formatTimestamp(dynamic timestamp) {
-    if (timestamp == null) {
-      return 'Unknown time';
-    }
-    
-    DateTime dateTime;
-    if (timestamp is DateTime) {
-      dateTime = timestamp;
-    } else if (timestamp is String) {
-      try {
-        dateTime = DateTime.parse(timestamp);
-      } catch (e) {
-        return 'Invalid time';
-      }
-    } else {
-      return 'Unknown time';
-    }
-    
+  String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
-    final difference = now.difference(dateTime);
+    final difference = now.difference(timestamp);
     
     if (difference.inMinutes < 60) {
       return '${difference.inMinutes} minutes ago';
@@ -380,98 +362,64 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _showAddNotificationDialog(BuildContext context) {
-    _titleController.clear();
-    _messageController.clear();
-    _typeController.text = _types[0];
-    _priorityController.text = _priorities[1];
-    _targetAudienceController.text = _audiences[0];
+    final titleController = TextEditingController();
+    final messageController = TextEditingController();
+    String selectedType = 'General';
+    String selectedPriority = 'Normal';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add New Announcement'),
+        title: const Text('Add New Notification'),
         contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         actionsPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Title cannot be empty';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Message',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Message cannot be empty';
-                        }
-                        return null;
-                      },
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: _typeController.text,
-                      decoration: const InputDecoration(
-                        labelText: 'Type',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _types.map((type) {
-                        return DropdownMenuItem(value: type, child: Text(type));
-                      }).toList(),
-                      onChanged: (value) {
-                        _typeController.text = value ?? _types[0];
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: _priorityController.text,
-                      decoration: const InputDecoration(
-                        labelText: 'Priority',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _priorities.map((priority) {
-                        return DropdownMenuItem(value: priority, child: Text(priority));
-                      }).toList(),
-                      onChanged: (value) {
-                        _priorityController.text = value ?? _priorities[1];
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: _targetAudienceController.text,
-                      decoration: const InputDecoration(
-                        labelText: 'Target Audience',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _audiences.map((audience) {
-                        return DropdownMenuItem(value: audience, child: Text(audience));
-                      }).toList(),
-                      onChanged: (value) {
-                        _targetAudienceController.text = value ?? _audiences[0];
-                      },
-                    ),
-                  ],
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
                 ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: selectedType,
+                decoration: const InputDecoration(
+                  labelText: 'Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['General', 'Academic', 'Fee', 'Important'].map((type) {
+                  return DropdownMenuItem(value: type, child: Text(type));
+                }).toList(),
+                onChanged: (value) {
+                  selectedType = value ?? 'General';
+                },
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: selectedPriority,
+                decoration: const InputDecoration(
+                  labelText: 'Priority',
+                  border: OutlineInputBorder(),
+                ),
+                items: ['Low', 'Normal', 'Important'].map((priority) {
+                  return DropdownMenuItem(value: priority, child: Text(priority));
+                }).toList(),
+                onChanged: (value) {
+                  selectedPriority = value ?? 'Normal';
+                },
               ),
             ],
           ),
@@ -483,24 +431,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
+              if (titleController.text.isNotEmpty && messageController.text.isNotEmpty) {
                 final newNotification = {
-                  'id': context.read<NotificationProvider>().notifications.length + 1,
-                  'title': _titleController.text,
-                  'message': _messageController.text,
-                  'type': _typeController.text,
-                  'priority': _priorityController.text,
+                  'id': _notifications.length + 1,
+                  'title': titleController.text,
+                  'message': messageController.text,
+                  'type': selectedType,
+                  'priority': selectedPriority,
                   'timestamp': DateTime.now(),
                   'isRead': false,
                   'sender': 'You',
                 };
                 
-                context.read<NotificationProvider>().addNotification(newNotification, context);
+                setState(() {
+                  _notifications.insert(0, newNotification);
+                });
                 
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Announcement added successfully!'),
+                    content: Text('Notification added successfully!'),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -511,23 +461,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ],
       ),
     );
-  }
-
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN') {
-      return FloatingActionButton(
-        onPressed: () => _showAddNotificationDialog(context),
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      );
-    }
-    return null;
-  }
-
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
   }
 }
 

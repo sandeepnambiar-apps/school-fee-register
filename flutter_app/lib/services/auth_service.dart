@@ -1,6 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 import 'api_service.dart';
-import 'dart:convert'; // Added for jsonEncode
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -24,62 +24,39 @@ class AuthService {
     try {
       // For development, use mock login for multiple roles
       Map<String, dynamic>? user;
-      
-      // Super Admin for School 1
-      if (username == 'superadmin1' && password == 'super123') {
+      if (username == 'superadmin' && password == 'super123') {
         user = {
           'id': 1,
-          'username': 'superadmin1',
-          'email': 'superadmin1@boon.school.com',
-          'role': 'SUPER_ADMIN',
-          'name': 'Super Admin - BOON E.M School',
-          'schoolId': 1,
+          'username': 'superadmin',
+          'email': 'superadmin@kidsy.com',
+          'role': 'Super Admin',
+          'name': 'Super Administrator',
         };
-      }
-      // Super Admin for School 2
-      else if (username == 'superadmin2' && password == 'super456') {
+      } else if (username == 'admin001' && password == 'admin123') {
         user = {
           'id': 2,
-          'username': 'superadmin2',
-          'email': 'superadmin2@school2.com',
-          'role': 'SUPER_ADMIN',
-          'name': 'Super Admin - School 2',
-          'schoolId': 2,
+          'username': 'admin001',
+          'email': 'admin001@school.com',
+          'role': 'School Admin',
+          'name': 'School Administrator',
         };
-      }
-      // School Admin
-      else if (username == 'schooladmin' && password == 'school123') {
+      } else if (username == 'T001' && password == 'teacher123') {
         user = {
           'id': 3,
-          'username': 'schooladmin',
-          'email': 'schooladmin@school.com',
-          'role': 'SCHOOL_ADMIN',
-          'name': 'School Administrator',
-          'schoolId': 1,
-        };
-      }
-      // Teacher
-      else if (username == 'teacher' && password == 'teacher123') {
-        user = {
-          'id': 4,
-          'username': 'teacher',
+          'username': 'T001',
           'email': 'teacher@school.com',
-          'role': 'TEACHER',
+          'role': 'Teacher',
           'name': 'Class Teacher',
           'class': '10A',
-          'schoolId': 1,
         };
-      }
-      // Parent
-      else if (username == 'parent' && password == 'parent123') {
+      } else if (username == 'P001' && password == 'parent123') {
         user = {
-          'id': 5,
-          'username': 'parent',
+          'id': 4,
+          'username': 'P001',
           'email': 'parent@home.com',
-          'role': 'PARENT',
+          'role': 'Parent',
           'name': 'Parent User',
           'kidId': 1,
-          'schoolId': 1,
         };
       }
 
@@ -102,7 +79,7 @@ class AuthService {
       
       // Real API call (uncomment when backend is ready)
       /*
-      final response = await _apiService.callService(
+      final response = await _apiService.callAuthService(
         '/api/auth/login',
         method: 'POST',
         data: {
@@ -129,7 +106,7 @@ class AuthService {
       
       return {
         'success': false,
-        'message': 'Invalid credentials. Please check your username and password.',
+        'message': 'Invalid credentials. Try: Super Admin (superadmin/super123), School Admin (admin001/admin123), Teacher (T001/teacher123), Parent (P001/parent123).',
       };
     } catch (e) {
       return {
@@ -165,9 +142,7 @@ class AuthService {
     try {
       final userData = await _storage.read(key: _userKey);
       if (userData != null) {
-        // Parse the stored user data string back to map
-        // This is a simplified approach - in production, use proper serialization
-        return jsonDecode(userData);
+        return jsonDecode(userData) as Map<String, dynamic>;
       }
       return null;
     } catch (e) {
@@ -191,7 +166,7 @@ class AuthService {
       if (refreshToken == null) return false;
 
       // Call refresh token API
-      final response = await _apiService.callService(
+      final response = await _apiService.callAuthService(
         '/api/auth/refresh',
         method: 'POST',
         data: {'refreshToken': refreshToken},
@@ -219,7 +194,7 @@ class AuthService {
       if (token == null) return false;
 
       // Call validate token API
-      final response = await _apiService.callService(
+      final response = await _apiService.callAuthService(
         '/api/auth/validate',
         method: 'GET',
         data: null,
@@ -228,169 +203,6 @@ class AuthService {
       return response.statusCode == 200;
     } catch (e) {
       return false;
-    }
-  }
-
-  // Parent login with mobile and login code
-  Future<Map<String, dynamic>> loginWithMobileAndCode(String mobileNumber, String loginCode) async {
-    try {
-      // Mock parent verification - in real app, this would call the backend API
-      Map<String, dynamic>? user;
-      
-      // Mock parent data - in real app, this would come from the database
-      if (mobileNumber == '9876543210' && loginCode == 'ABC123') {
-        user = {
-          'id': 101,
-          'username': 'parent_9876543210',
-          'email': 'parent@home.com',
-          'role': 'PARENT',
-          'name': 'John Parent',
-          'mobileNumber': mobileNumber,
-          'schoolId': 1,
-          'kidId': 1,
-          'kidName': 'John Doe',
-          'isFirstTime': true, // Flag to indicate if password setup is needed
-        };
-      } else if (mobileNumber == '9876543211' && loginCode == 'DEF456') {
-        user = {
-          'id': 102,
-          'username': 'parent_9876543211',
-          'email': 'parent2@home.com',
-          'role': 'PARENT',
-          'name': 'Sarah Parent',
-          'mobileNumber': mobileNumber,
-          'schoolId': 1,
-          'kidId': 2,
-          'kidName': 'Sarah Smith',
-          'isFirstTime': false, // Already has password set
-        };
-      }
-
-      if (user != null) {
-        final token = 'mock_jwt_token_${DateTime.now().millisecondsSinceEpoch}';
-        final refreshToken = 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}';
-
-        // Store tokens and user data
-        await _storage.write(key: _tokenKey, value: token);
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
-        await _storage.write(key: _userKey, value: jsonEncode(user));
-
-        return {
-          'success': true,
-          'user': user,
-          'token': token,
-          'message': user['isFirstTime'] ? 'Please set up your password' : 'Login successful',
-        };
-      }
-      
-      // Real API call (uncomment when backend is ready)
-      /*
-      final response = await _apiService.callService(
-        '/api/parents/verify-login-code',
-        method: 'POST',
-        data: {
-          'mobileNumber': mobileNumber,
-          'loginCode': loginCode,
-        },
-      );
-      
-      final data = _apiService.parseResponse(response);
-      final token = data['token'];
-      final user = data['user'];
-      
-      // Store tokens and user data
-      await _storage.write(key: _tokenKey, value: token);
-      await _storage.write(key: _userKey, value: user.toString());
-      
-      return {
-        'success': true,
-        'user': user,
-        'token': token,
-        'message': 'Login successful',
-      };
-      */
-      
-      return {
-        'success': false,
-        'message': 'Invalid mobile number or login code. Please check your credentials.',
-      };
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Login failed: ${e.toString()}',
-      };
-    }
-  }
-
-  // Setup parent password
-  Future<Map<String, dynamic>> setupParentPassword(String mobileNumber, String password) async {
-    try {
-      // Mock password setup - in real app, this would call the backend API
-      Map<String, dynamic>? user;
-      
-      // Mock parent data - in real app, this would come from the database
-      if (mobileNumber == '9876543210') {
-        user = {
-          'id': 101,
-          'username': 'parent_9876543210',
-          'email': 'parent@home.com',
-          'role': 'PARENT',
-          'name': 'John Parent',
-          'mobileNumber': mobileNumber,
-          'schoolId': 1,
-          'kidId': 1,
-          'kidName': 'John Doe',
-          'isFirstTime': false, // Password is now set
-        };
-      }
-
-      if (user != null) {
-        // Update user data to reflect password is set
-        user['isFirstTime'] = false;
-        
-        // Store updated user data
-        await _storage.write(key: _userKey, value: jsonEncode(user));
-
-        return {
-          'success': true,
-          'user': user,
-          'message': 'Password set successfully!',
-        };
-      }
-      
-      // Real API call (uncomment when backend is ready)
-      /*
-      final response = await _apiService.callService(
-        '/api/parents/setup-password',
-        method: 'POST',
-        data: {
-          'mobileNumber': mobileNumber,
-          'password': password,
-        },
-      );
-      
-      final data = _apiService.parseResponse(response);
-      final user = data['user'];
-      
-      // Store updated user data
-      await _storage.write(key: _userKey, value: user.toString());
-      
-      return {
-        'success': true,
-        'user': user,
-        'message': 'Password set successfully!',
-      };
-      */
-      
-      return {
-        'success': false,
-        'message': 'Failed to set password. Please try again.',
-      };
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Password setup failed: ${e.toString()}',
-      };
     }
   }
 }

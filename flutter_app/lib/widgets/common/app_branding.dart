@@ -20,6 +20,19 @@ class AppBranding extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Container(
+            width: isCompact ? 24.0 : 32.0,
+            height: isCompact ? 24.0 : 32.0,
+            decoration: BoxDecoration(
+              color: Colors.grey[600],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.child_care,
+              color: Colors.white,
+              size: isCompact ? 16.0 : 20.0,
+            ),
+          ),
           SizedBox(width: isCompact ? 8.0 : 12.0),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +53,7 @@ class AppBranding extends StatelessWidget {
                       vertical: isCompact ? 2.0 : 3.0,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.orange[600],
+                      color: Colors.orange,
                       shape: BoxShape.circle,
                     ),
                     child: Text(
@@ -54,7 +67,13 @@ class AppBranding extends StatelessWidget {
                   ),
                 ],
               ),
-
+              Text(
+                'School Management System',
+                style: TextStyle(
+                  fontSize: isCompact ? 9.0 : 11.0,
+                  color: Colors.grey[600],
+                ),
+              ),
             ],
           ),
         ],

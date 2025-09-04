@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/common/app_branding.dart';
 
 class HelpDeskScreen extends StatefulWidget {
   const HelpDeskScreen({super.key});
@@ -35,6 +36,36 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
     'Urgent',
   ];
 
+  final List<Map<String, dynamic>> _tickets = [
+    {
+      'id': 'T001',
+      'subject': 'Fee Payment Issue',
+      'category': 'Fee Related',
+      'priority': 'High',
+      'status': 'Open',
+      'createdDate': '2024-01-15',
+      'description': 'Unable to process online fee payment',
+    },
+    {
+      'id': 'T002',
+      'subject': 'Login Problem',
+      'category': 'Technical Support',
+      'priority': 'Medium',
+      'status': 'In Progress',
+      'createdDate': '2024-01-14',
+      'description': 'Cannot login to student portal',
+    },
+    {
+      'id': 'T003',
+      'subject': 'Grade Update Request',
+      'category': 'Academic Support',
+      'priority': 'Low',
+      'status': 'Closed',
+      'createdDate': '2024-01-10',
+      'description': 'Request to review and update grades',
+    },
+  ];
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -50,57 +81,15 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
-          title: const Text('Talk to Us'),
-          backgroundColor: Colors.blue,
+          title: const Text('Help Desk'),
+          backgroundColor: Colors.lightBlue[600],
           foregroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/dashboard'),
           ),
-          actions: [
-            // Kidsy Branding in App Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Kid',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[600],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          'sy',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Submit Ticket', icon: Icon(Icons.add)),
@@ -111,6 +100,7 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
         ),
         body: Column(
           children: [
+            const AppBranding(),
             Expanded(
               child: TabBarView(
                 children: [
@@ -224,33 +214,39 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
   }
 
   Widget _buildMyTicketsTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.support_agent,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No tickets yet',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _tickets.length,
+      itemBuilder: (context, index) {
+        final ticket = _tickets[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: _getPriorityColor(ticket['priority']),
+              child: Icon(
+                _getCategoryIcon(ticket['category']),
+                color: Colors.white,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Submit your first ticket to get started',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
+            title: Text(
+              ticket['subject'],
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${ticket['category']} • ${ticket['priority']} Priority'),
+                Text('Created: ${ticket['createdDate']}'),
+                Text('Status: ${ticket['status']}'),
+              ],
+            ),
+            trailing: _getStatusChip(ticket['status']),
+            onTap: () => _showTicketDetails(ticket),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -306,6 +302,61 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
     );
   }
 
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'Low':
+        return Colors.green;
+      case 'Medium':
+        return Colors.orange;
+      case 'High':
+        return Colors.red;
+      case 'Urgent':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Technical Support':
+        return Icons.computer;
+      case 'Fee Related':
+        return Icons.payment;
+      case 'Academic Support':
+        return Icons.school;
+      case 'Administrative':
+        return Icons.admin_panel_settings;
+      default:
+        return Icons.help;
+    }
+  }
+
+  Widget _getStatusChip(String status) {
+    Color color;
+    switch (status) {
+      case 'Open':
+        color = Colors.orange;
+        break;
+      case 'In Progress':
+        color = Colors.blue;
+        break;
+      case 'Closed':
+        color = Colors.green;
+        break;
+      default:
+        color = Colors.grey;
+    }
+
+    return Chip(
+      label: Text(
+        status,
+        style: const TextStyle(color: Colors.white, fontSize: 12),
+      ),
+      backgroundColor: color,
+    );
+  }
+
   void _submitTicket() {
     if (_formKey.currentState!.validate()) {
       // TODO: Implement ticket submission
@@ -327,5 +378,50 @@ class _HelpDeskScreenState extends State<HelpDeskScreen> {
         _selectedPriority = 'Medium';
       });
     }
+  }
+
+  void _showTicketDetails(Map<String, dynamic> ticket) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(ticket['subject']),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDetailRow('Category', ticket['category']),
+            _buildDetailRow('Priority', ticket['priority']),
+            _buildDetailRow('Status', ticket['status']),
+            _buildDetailRow('Created', ticket['createdDate']),
+            _buildDetailRow('Description', ticket['description']),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
   }
 }

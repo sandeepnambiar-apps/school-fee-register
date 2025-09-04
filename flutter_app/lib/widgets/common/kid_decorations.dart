@@ -177,5 +177,3 @@ class FloatingKidElements extends StatelessWidget {
     );
   }
 }
-
-

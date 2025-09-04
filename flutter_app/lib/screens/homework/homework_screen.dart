@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/homework_provider.dart';
-import '../../models/homework.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/app_branding.dart';
 import '../../providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,58 +36,15 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
       appBar: AppBar(
         title: const Text('Homework Management'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.lightBlue[600],
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/dashboard'),
         ),
-        actions: [
-          // Kidsy Branding in App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -100,6 +57,7 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
       ),
       body: Column(
         children: [
+          const AppBranding(),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -111,189 +69,6 @@ class _HomeworkScreenState extends State<HomeworkScreen> with SingleTickerProvid
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER') {
-      return FloatingActionButton(
-        onPressed: () => _showAddAssignmentDialog(context),
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      );
-    }
-    return null;
-  }
-
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
-  }
-
-  void _showAddAssignmentDialog(BuildContext context, [Homework? assignment]) {
-    final isEditing = assignment != null;
-    final titleController = TextEditingController(text: assignment?.title ?? '');
-    final subjectController = TextEditingController(text: assignment?.subject ?? '');
-    final descriptionController = TextEditingController(text: assignment?.description ?? '');
-    final dueDateController = TextEditingController(text: assignment?.dueDate.toString().split(' ')[0] ?? '');
-    
-    // Get current user role
-    final currentUser = context.read<AuthProvider>().user;
-    final userRole = currentUser?['role'] ?? '';
-    final isAdminOrTeacher = userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER';
-    
-    // Class selection variables
-    String? selectedClass = assignment?.className ?? (currentUser?['class'] ?? '10A');
-    String? selectedSection = assignment?.section ?? 'A';
-    
-    // Available classes and sections
-    final List<String> availableClasses = ['6A', '6B', '7A', '7B', '8A', '8B', '9A', '9B', '10A', '10B', '11A', '11B', '12A', '12B'];
-    final List<String> availableSections = ['A', 'B', 'C', 'D'];
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Assignment' : 'Add New Assignment'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: subjectController,
-                  decoration: const InputDecoration(
-                    labelText: 'Subject',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Class selection for admin and teacher roles
-                if (isAdminOrTeacher) ...[
-                  DropdownButtonFormField<String>(
-                    value: selectedClass,
-                    decoration: const InputDecoration(
-                      labelText: 'Class',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: availableClasses.map((className) {
-                      return DropdownMenuItem<String>(
-                        value: className,
-                        child: Text(className),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedClass = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a class';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedSection,
-                    decoration: const InputDecoration(
-                      labelText: 'Section',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: availableSections.map((section) {
-                      return DropdownMenuItem<String>(
-                        value: section,
-                        child: Text(section),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedSection = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a section';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: dueDateController,
-                  decoration: const InputDecoration(
-                    labelText: 'Due Date',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.calendar_today),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date != null) {
-                      dueDateController.text = date.toString().split(' ')[0];
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isNotEmpty && subjectController.text.isNotEmpty) {
-                  final homeworkData = {
-                    'id': assignment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    'title': titleController.text,
-                    'subject': subjectController.text,
-                    'description': descriptionController.text,
-                    'dueDate': DateTime.parse(dueDateController.text.isEmpty ? DateTime.now().toString() : dueDateController.text),
-                    'status': assignment?.status ?? 'Active',
-                    'className': selectedClass,
-                    'section': selectedSection,
-                  };
-                  
-                  if (isEditing) {
-                    context.read<HomeworkProvider>().updateAssignment(homeworkData);
-                  } else {
-                    context.read<HomeworkProvider>().addAssignment(homeworkData, context);
-                  }
-                  
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(isEditing ? 'Update' : 'Add'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -324,7 +99,19 @@ class _AssignmentsTab extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox.shrink(),
+                  Consumer<AuthProvider>(
+                    builder: (context, auth, _) {
+                      final role = auth.user?['role'] ?? 'Super Admin';
+                      if (role == 'Parent') {
+                        return const SizedBox.shrink();
+                      }
+                      return PrimaryButton(
+                        text: 'Add Assignment',
+                        onPressed: () => _showAddAssignmentDialog(context),
+                        backgroundColor: Colors.lightBlue[600],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -351,9 +138,8 @@ class _AssignmentsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildAssignmentCard(BuildContext context, Homework assignment, HomeworkProvider provider) {
+  Widget _buildAssignmentCard(BuildContext context, Map<String, dynamic> assignment, HomeworkProvider provider) {
     return Card(
-      color: Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: ListTile(
@@ -365,21 +151,21 @@ class _AssignmentsTab extends StatelessWidget {
           ),
         ),
         title: Text(
-          assignment.title,
+          assignment['title'],
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Subject: ${assignment.subject}'),
-            Text('Due: ${assignment.dueDate.toString().split(' ')[0]}'),
-            Text('Status: ${assignment.status}'),
+            Text('Subject: ${assignment['subject']}'),
+            Text('Due: ${assignment['dueDate']}'),
+            Text('Status: ${assignment['status']}'),
           ],
         ),
         trailing: Consumer<AuthProvider>(
           builder: (context, auth, _) {
             final role = auth.user?['role'] ?? 'Super Admin';
-            if (role == 'PARENT') {
+            if (role == 'Parent') {
               return const SizedBox.shrink();
             }
             return PopupMenuButton(
@@ -422,175 +208,105 @@ class _AssignmentsTab extends StatelessWidget {
     );
   }
 
-  void _showAddAssignmentDialog(BuildContext context, [Homework? assignment]) {
+  void _showAddAssignmentDialog(BuildContext context, [Map<String, dynamic>? assignment]) {
     final isEditing = assignment != null;
-    final titleController = TextEditingController(text: assignment?.title ?? '');
-    final subjectController = TextEditingController(text: assignment?.subject ?? '');
-    final descriptionController = TextEditingController(text: assignment?.description ?? '');
-    final dueDateController = TextEditingController(text: assignment?.dueDate.toString().split(' ')[0] ?? '');
-    
-    // Get current user role
-    final currentUser = context.read<AuthProvider>().user;
-    final userRole = currentUser?['role'] ?? '';
-    final isAdminOrTeacher = userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN' || userRole == 'TEACHER';
-    
-    // Class selection variables
-    String? selectedClass = assignment?.className ?? (currentUser?['class'] ?? '10A');
-    String? selectedSection = assignment?.section ?? 'A';
-    
-    // Available classes and sections
-    final List<String> availableClasses = ['6A', '6B', '7A', '7B', '8A', '8B', '9A', '9B', '10A', '10B', '11A', '11B', '12A', '12B'];
-    final List<String> availableSections = ['A', 'B', 'C', 'D'];
+    final titleController = TextEditingController(text: assignment?['title'] ?? '');
+    final subjectController = TextEditingController(text: assignment?['subject'] ?? '');
+    final descriptionController = TextEditingController(text: assignment?['description'] ?? '');
+    final dueDateController = TextEditingController(text: assignment?['dueDate'] ?? '');
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Assignment' : 'Add New Assignment'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(),
-                  ),
+      builder: (context) => AlertDialog(
+        title: Text(isEditing ? 'Edit Assignment' : 'Add New Assignment'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: subjectController,
-                  decoration: const InputDecoration(
-                    labelText: 'Subject',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Class selection for admin and teacher roles
-                if (isAdminOrTeacher) ...[
-                  DropdownButtonFormField<String>(
-                    value: selectedClass,
-                    decoration: const InputDecoration(
-                      labelText: 'Class',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: availableClasses.map((className) {
-                      return DropdownMenuItem<String>(
-                        value: className,
-                        child: Text(className),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedClass = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a class';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedSection,
-                    decoration: const InputDecoration(
-                      labelText: 'Section',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: availableSections.map((section) {
-                      return DropdownMenuItem<String>(
-                        value: section,
-                        child: Text(section),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedSection = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a section';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: dueDateController,
-                  decoration: const InputDecoration(
-                    labelText: 'Due Date',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (titleController.text.isNotEmpty && subjectController.text.isNotEmpty) {
-                  final assignmentData = {
-                    'id': assignment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    'title': titleController.text,
-                    'subject': subjectController.text,
-                    'className': selectedClass,
-                    'section': selectedSection,
-                    'description': descriptionController.text,
-                    'dueDate': dueDateController.text,
-                    'status': 'Active',
-                  };
-
-                  if (isEditing) {
-                    context.read<HomeworkProvider>().updateAssignment(assignmentData);
-                  } else {
-                    context.read<HomeworkProvider>().addAssignment(assignmentData, context);
-                  }
-
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Assignment ${isEditing ? 'updated' : 'added'} successfully!'),
-                      backgroundColor: Colors.green[600],
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue[600],
-                foregroundColor: Colors.white,
               ),
-              child: Text(isEditing ? 'Update' : 'Add'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: subjectController,
+                decoration: const InputDecoration(
+                  labelText: 'Subject',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: dueDateController,
+                decoration: const InputDecoration(
+                  labelText: 'Due Date',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (titleController.text.isNotEmpty && subjectController.text.isNotEmpty) {
+                final assignmentData = {
+                  'id': assignment?['id'] ?? DateTime.now().millisecondsSinceEpoch,
+                  'title': titleController.text,
+                  'subject': subjectController.text,
+                  'description': descriptionController.text,
+                  'dueDate': dueDateController.text,
+                  'status': 'Active',
+                };
+
+                if (isEditing) {
+                  context.read<HomeworkProvider>().updateAssignment(assignmentData);
+                } else {
+                  context.read<HomeworkProvider>().addAssignment(assignmentData);
+                }
+
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Assignment ${isEditing ? 'updated' : 'added'} successfully!'),
+                    backgroundColor: Colors.green[600],
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.lightBlue[600],
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isEditing ? 'Update' : 'Add'),
+          ),
+        ],
       ),
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, Homework assignment, HomeworkProvider provider) {
+  void _showDeleteConfirmationDialog(BuildContext context, Map<String, dynamic> assignment, HomeworkProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Assignment'),
-        content: Text('Are you sure you want to delete "${assignment.title}"?'),
+        content: Text('Are you sure you want to delete "${assignment['title']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -599,10 +315,10 @@ class _AssignmentsTab extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              provider.deleteAssignment(assignment.id);
+              provider.deleteAssignment(assignment['id']);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${assignment.title} deleted successfully'),
+                  content: Text('${assignment['title']} deleted successfully'),
                   backgroundColor: Colors.red[600],
                 ),
               );
@@ -671,7 +387,7 @@ class _SubmissionsTab extends StatelessWidget {
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.green[100],
           child: Icon(
             Icons.upload_file,
             color: Colors.green[700],
@@ -808,6 +524,5 @@ class _GradingTab extends StatelessWidget {
       ),
     );
   }
-
 }
 

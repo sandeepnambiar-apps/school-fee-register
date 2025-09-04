@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common/custom_button.dart';
-import '../../widgets/common/cartoon_children_icon.dart';
+import '../../widgets/common/app_branding.dart';
 import 'package:go_router/go_router.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -28,7 +28,6 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('Reports & Analytics'),
         backgroundColor: Colors.blue,
@@ -38,47 +37,6 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/dashboard'),
         ),
-        actions: [
-          // Kidsy Branding in App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -93,6 +51,8 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
       ),
       body: Column(
         children: [
+          // App Branding for Mobile
+          const AppBranding(),
           // Tab Content
           Expanded(
             child: TabBarView(
@@ -131,11 +91,11 @@ class _OverviewTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildMetricCardWithWidget(
-                  title: 'Total Kids',
-                  value: '156',
-                  icon: CartoonChildrenIcon(size: 32, color: Colors.blue),
-                  color: Colors.blue,
+                child: _buildMetricCard(
+                  'Total Students',
+                  '156',
+                  Icons.people,
+                  Colors.blue,
                 ),
               ),
               const SizedBox(width: 16),
@@ -206,15 +166,6 @@ class _OverviewTab extends StatelessWidget {
   }
 
   Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
-    return _buildMetricCardWithWidget(title: title, value: value, icon: Icon(icon, size: 32, color: color), color: color);
-  }
-
-  Widget _buildMetricCardWithWidget({
-    required String title,
-    required String value,
-    required Widget icon,
-    required Color color,
-  }) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -232,7 +183,11 @@ class _OverviewTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          icon,
+          Icon(
+            icon,
+            size: 32,
+            color: color,
+          ),
           const SizedBox(height: 12),
           Text(
             value,
@@ -691,7 +646,7 @@ class _AttendanceTab extends StatelessWidget {
                       child: _buildAttendanceMetric('Attendance Rate', '91.0%', Colors.blue),
                     ),
                     Expanded(
-                      child: _buildAttendanceMetric('Total Kids', '156', Colors.purple),
+                      child: _buildAttendanceMetric('Total Students', '156', Colors.purple),
                     ),
                   ],
                 ),
@@ -785,7 +740,7 @@ class _AttendanceTab extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$present/$total kids present',
+                  '$present/$total students present',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],

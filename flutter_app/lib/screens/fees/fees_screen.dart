@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/fee_provider.dart';
-import '../../models/fee_structure.dart';
-import '../../models/fee_payment.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/app_branding.dart';
 import '../../providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,11 +36,9 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
       appBar: AppBar(
         title: const Text('Fees Management'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.lightBlue[600],
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -49,49 +46,10 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
           onPressed: () => context.go('/dashboard'),
         ),
         actions: [
-          // Kidsy Branding in App Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           Consumer<AuthProvider>(
             builder: (context, auth, _) {
               final role = auth.user?['role'] ?? 'Super Admin';
-              if (role == 'PARENT') {
+              if (role == 'Parent') {
                 return IconButton(
                   icon: const Icon(Icons.payment),
                   onPressed: () => _showPaymentDialog(context),
@@ -114,6 +72,8 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
       ),
       body: Column(
         children: [
+          // App Branding for Mobile
+          const AppBranding(),
           // Tab Content
           Expanded(
             child: TabBarView(
@@ -307,30 +267,6 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
       ),
     );
   }
-
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN') {
-      return FloatingActionButton(
-        onPressed: () => _showAddFeeStructureDialog(context),
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      );
-    }
-    return null;
-  }
-
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
-  }
-
-  void _showAddFeeStructureDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const _AddFeeStructureDialog(),
-    );
-  }
 }
 
 class _FeeStructureTab extends StatelessWidget {
@@ -358,12 +294,10 @@ class _FeeStructureTab extends StatelessWidget {
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       final role = auth.user?['role'] ?? 'Super Admin';
-                      if (role == 'PARENT') return const SizedBox.shrink();
+                      if (role == 'Parent') return const SizedBox.shrink();
                       return PrimaryButton(
                         text: 'Add Fee Structure',
                         onPressed: () => _showAddFeeStructureDialog(context),
-                        backgroundColor: Colors.blue[600],
-                        textColor: Colors.white,
                       );
                     },
                   ),
@@ -386,27 +320,26 @@ class _FeeStructureTab extends StatelessWidget {
     );
   }
 
-  Widget _buildFeeStructureCard(BuildContext context, FeeStructure fee) {
+  Widget _buildFeeStructureCard(BuildContext context, Map<String, dynamic> fee) {
     return Card(
-      color: Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.green[100],
           child: Icon(Icons.attach_money, color: Colors.green[700]),
         ),
-        title: Text(fee.feeType),
+        title: Text(fee['name']),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(fee.description),
-            Text('Amount: \$${fee.amount.toString()} - ${fee.frequency}'),
-            Text('Class: ${fee.className} - Due: ${fee.dueDate.toString().split(' ')[0]}'),
+            Text(fee['description']),
+            Text('Amount: \$${fee['amount']?.toString() ?? '0'} - ${fee['frequency']}'),
+            Text('Class: ${fee['class']} - ${fee['academicYear']}'),
           ],
         ),
         trailing: Chip(
-          label: Text(fee.isActive ? 'Active' : 'Inactive'),
-          backgroundColor: fee.isActive ? Colors.white : Colors.white,
+          label: Text(fee['status']),
+          backgroundColor: fee['status'] == 'Active' ? Colors.green[100] : Colors.grey[100],
         ),
       ),
     );
@@ -445,7 +378,7 @@ class _StudentFeesTab extends StatelessWidget {
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       final role = auth.user?['role'] ?? 'Super Admin';
-                      if (role == 'PARENT') return const SizedBox.shrink();
+                      if (role == 'Parent') return const SizedBox.shrink();
                       return PrimaryButton(
                         text: 'Add Student Fee',
                         onPressed: () => _showAddStudentFeeDialog(context),
@@ -471,8 +404,8 @@ class _StudentFeesTab extends StatelessWidget {
     );
   }
 
-  Widget _buildStudentFeeCard(BuildContext context, FeePayment fee) {
-    final isPaid = fee.status == 'Paid';
+  Widget _buildStudentFeeCard(BuildContext context, Map<String, dynamic> fee) {
+    final isPaid = fee['status'] == 'Paid';
     final statusColor = isPaid ? Colors.green : Colors.orange;
 
     return Card(
@@ -485,18 +418,18 @@ class _StudentFeesTab extends StatelessWidget {
             color: statusColor[700],
           ),
         ),
-        title: Text(fee.studentName),
+        title: Text(fee['studentName']),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Fee: ${fee.feeType}'),
-            Text('Amount: \$${fee.amount.toString()}'),
-            Text('Due Date: ${fee.dueDate.toString().split(' ')[0]}'),
-            if (isPaid) Text('Paid: \$${fee.paidAmount.toString()} on ${fee.paidDate?.toString().split(' ')[0] ?? 'N/A'}'),
+            Text('Fee: ${fee['feeName']}'),
+            Text('Amount: \$${fee['amount']?.toString() ?? '0'}'),
+            Text('Due Date: ${fee['dueDate']}'),
+            if (isPaid) Text('Paid: \$${fee['paidAmount']} on ${fee['paidDate']}'),
           ],
         ),
         trailing: Chip(
-          label: Text(fee.status),
+          label: Text(fee['status']),
           backgroundColor: statusColor[100],
           labelStyle: TextStyle(color: statusColor[700]),
         ),
@@ -537,7 +470,7 @@ class _PaymentsTab extends StatelessWidget {
                   Consumer<AuthProvider>(
                     builder: (context, auth, _) {
                       final role = auth.user?['role'] ?? 'Super Admin';
-                      if (role == 'PARENT') return const SizedBox.shrink();
+                      if (role == 'Parent') return const SizedBox.shrink();
                       return PrimaryButton(
                         text: 'Record Payment',
                         onPressed: () => _showRecordPaymentDialog(context),
@@ -563,7 +496,7 @@ class _PaymentsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentCard(BuildContext context, FeePayment payment) {
+  Widget _buildPaymentCard(BuildContext context, Map<String, dynamic> payment) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -571,19 +504,19 @@ class _PaymentsTab extends StatelessWidget {
           backgroundColor: Colors.blue[100],
           child: Icon(Icons.payment, color: Colors.blue[700]),
         ),
-        title: Text(payment.studentName),
+        title: Text(payment['studentName']),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Fee: ${payment.feeType}'),
-            Text('Amount: \$${payment.amount.toString()}'),
-            Text('Method: ${payment.paymentMethod}'),
-            Text('Date: ${payment.paidDate?.toString().split(' ')[0] ?? 'N/A'}'),
-            Text('Transaction ID: ${payment.transactionId ?? 'N/A'}'),
+            Text('Fee: ${payment['feeName']}'),
+            Text('Amount: \$${payment['amount']?.toString() ?? '0'}'),
+            Text('Method: ${payment['paymentMethod']}'),
+            Text('Date: ${payment['paymentDate']}'),
+            Text('Transaction ID: ${payment['transactionId']}'),
           ],
         ),
         trailing: Chip(
-          label: Text(payment.status),
+          label: Text(payment['status']),
           backgroundColor: Colors.blue[100],
           labelStyle: TextStyle(color: Colors.blue[700]),
         ),
@@ -786,7 +719,7 @@ class _RecordPaymentDialogState extends State<_RecordPaymentDialog> {
                 'status': 'Completed',
               };
               
-              context.read<FeeProvider>().recordPayment(payment, context);
+              context.read<FeeProvider>().recordPayment(payment);
               Navigator.of(context).pop();
               
               ScaffoldMessenger.of(context).showSnackBar(
@@ -948,8 +881,6 @@ class _AddFeeStructureDialogState extends State<_AddFeeStructureDialog> {
         ),
         PrimaryButton(
           text: 'Add Fee Structure',
-          backgroundColor: Colors.blue[600],
-          textColor: Colors.white,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               final feeStructure = {
@@ -963,7 +894,7 @@ class _AddFeeStructureDialogState extends State<_AddFeeStructureDialog> {
                 'status': 'Active',
               };
               
-              context.read<FeeProvider>().addFeeStructure(feeStructure, context);
+              context.read<FeeProvider>().addFeeStructure(feeStructure);
               Navigator.of(context).pop();
               
               ScaffoldMessenger.of(context).showSnackBar(
@@ -1130,7 +1061,7 @@ class _AddStudentFeeDialogState extends State<_AddStudentFeeDialog> {
                 'paidDate': null,
               };
               
-              context.read<FeeProvider>().addStudentFee(studentFee, context);
+              context.read<FeeProvider>().addStudentFee(studentFee);
               Navigator.of(context).pop();
               
               ScaffoldMessenger.of(context).showSnackBar(

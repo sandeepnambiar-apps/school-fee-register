@@ -6,19 +6,16 @@ class ApiService {
   ApiService._internal();
 
   late final Dio _dio;
-  bool _isInitialized = false;
   
-  // Getter for dio instance
-  Dio get dio => _dio;
-  
-  // Base URL for monolithic backend
-  static const String baseUrl = 'http://localhost:8080';
+  // Base URLs for different services
+  static const String gatewayUrl = 'http://localhost:8080';
+  static const String authServiceUrl = 'http://localhost:8082';
+  static const String studentServiceUrl = 'http://localhost:8081';
+  static const String feeServiceUrl = 'http://localhost:8086';
 
   void initialize() {
-    if (_isInitialized) return; // Prevent multiple initializations
-    
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: gatewayUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -33,8 +30,6 @@ class ApiService {
       responseBody: true,
       logPrint: (obj) => print(obj),
     ));
-    
-    _isInitialized = true;
   }
 
   // Generic HTTP methods
@@ -74,25 +69,50 @@ class ApiService {
     }
   }
 
-  // Multi-school API endpoints
-  static const String schoolsEndpoint = '/api/schools';
-  static const String studentsEndpoint = '/api/students';
-  static const String feesEndpoint = '/api/fees';
-  static const String homeworkEndpoint = '/api/homework';
-  static const String notificationsEndpoint = '/api/notifications';
-  static const String timetableEndpoint = '/api/timetable';
-
-  // Generic service call method
-  Future<Response> callService(String endpoint, {String method = 'GET', dynamic data, Map<String, dynamic>? queryParameters}) async {
+  // Service-specific methods
+  Future<Response> callAuthService(String endpoint, {String method = 'GET', dynamic data}) async {
+    final url = '$authServiceUrl$endpoint';
     switch (method.toUpperCase()) {
       case 'GET':
-        return await get(endpoint, queryParameters: queryParameters);
+        return await get(url);
       case 'POST':
-        return await post(endpoint, data: data);
+        return await post(url, data: data);
       case 'PUT':
-        return await put(endpoint, data: data);
+        return await put(url, data: data);
       case 'DELETE':
-        return await delete(endpoint);
+        return await delete(url);
+      default:
+        throw Exception('Unsupported HTTP method: $method');
+    }
+  }
+
+  Future<Response> callStudentService(String endpoint, {String method = 'GET', dynamic data}) async {
+    final url = '$studentServiceUrl$endpoint';
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return await get(url);
+      case 'POST':
+        return await post(url, data: data);
+      case 'PUT':
+        return await put(url, data: data);
+      case 'DELETE':
+        return await delete(url);
+      default:
+        throw Exception('Unsupported HTTP method: $method');
+    }
+  }
+
+  Future<Response> callFeeService(String endpoint, {String method = 'GET', dynamic data}) async {
+    final url = '$feeServiceUrl$endpoint';
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return await get(url);
+      case 'POST':
+        return await post(url, data: data);
+      case 'PUT':
+        return await put(url, data: data);
+      case 'DELETE':
+        return await delete(url);
       default:
         throw Exception('Unsupported HTTP method: $method');
     }

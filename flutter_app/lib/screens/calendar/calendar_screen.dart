@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/app_branding.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -23,17 +22,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _loadMockEvents() {
-    // Color mapping for event types
-    final Map<String, Color> eventTypeColors = {
-      'Event': Colors.blue,
-      'Meeting': Colors.green,
-      'Competition': Colors.orange,
-      'Holiday': Colors.red,
-      'Exam': Colors.purple,
-      'Celebration': Colors.teal,
-      'Other': Colors.indigo,
-    };
-
     _events = [
       {
         'id': 1,
@@ -41,7 +29,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'description': 'School-wide sports competition',
         'date': DateTime(2024, 2, 15),
         'type': 'Event',
-        'color': eventTypeColors['Event']!,
+        'color': Colors.blue,
       },
       {
         'id': 2,
@@ -49,7 +37,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'description': 'Quarterly parent-teacher conference',
         'date': DateTime(2024, 2, 20),
         'type': 'Meeting',
-        'color': eventTypeColors['Meeting']!,
+        'color': Colors.green,
       },
       {
         'id': 3,
@@ -57,7 +45,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'description': 'Student science project exhibition',
         'date': DateTime(2024, 2, 25),
         'type': 'Competition',
-        'color': eventTypeColors['Competition']!,
+        'color': Colors.orange,
       },
       {
         'id': 4,
@@ -65,23 +53,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'description': 'National holiday',
         'date': DateTime(2024, 1, 26),
         'type': 'Holiday',
-        'color': eventTypeColors['Holiday']!,
-      },
-      {
-        'id': 5,
-        'title': 'Mid-Term Examinations',
-        'description': 'Class 6-12 mid-term exams',
-        'date': DateTime(2024, 3, 10),
-        'type': 'Exam',
-        'color': eventTypeColors['Exam']!,
-      },
-      {
-        'id': 6,
-        'title': 'Annual Day Celebration',
-        'description': 'Cultural program and awards ceremony',
-        'date': DateTime(2024, 3, 25),
-        'type': 'Celebration',
-        'color': eventTypeColors['Celebration']!,
+        'color': Colors.red,
       },
     ];
   }
@@ -89,8 +61,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
       appBar: AppBar(
         title: const Text('School Calendar'),
         backgroundColor: Colors.blue,
@@ -101,319 +71,85 @@ class _CalendarScreenState extends State<CalendarScreen> {
           onPressed: () => context.go('/dashboard'),
         ),
         actions: [
-          // Kidsy Branding in App Bar
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _showAddEventDialog(context),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // App Branding for Mobile
+          const AppBranding(),
+          // Calendar Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(16),
+            color: Colors.purple[50],
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Text(
+                  '${_getMonthName(_focusedDay.month)} ${_focusedDay.year}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.purple[700],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Row(
                   children: [
-                    Text(
-                      'Kid',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: () {
+                        setState(() {
+                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                        });
+                      },
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[600],
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        'sy',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () {
+                        setState(() {
+                          _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                        });
+                      },
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
-              final userRole = authProvider.user?['role'] ?? 'Super Admin';
-              
-              // Only show add button for Super Admin and School Admin
-              if (userRole == 'Super Admin' || userRole == 'School Admin') {
-                return IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _showAddEventDialog(context),
-                  tooltip: 'Add Event',
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          final userRole = authProvider.user?['role'] ?? 'Super Admin';
-          
-          if (userRole == 'Super Admin' || userRole == 'School Admin') {
-            return _buildAdminCalendarView();
-          } else if (userRole == 'Parent' || userRole == 'Teacher') {
-            return _buildUserCalendarView();
-          } else {
-            return _buildUserCalendarView();
-          }
-        },
-      ),
-    );
-  }
 
-  // Full calendar view for Super Admin and School Admin
-  Widget _buildAdminCalendarView() {
-    return Column(
-      children: [
-        // Calendar Header
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.purple[50],
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_getMonthName(_focusedDay.month)} ${_focusedDay.year}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.purple[700],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ],
+          // Calendar Grid
+          Expanded(
+            child: _buildCalendarGrid(),
           ),
-        ),
 
-        // Calendar Grid
-        Expanded(
-          child: _buildCalendarGrid(),
-        ),
-
-        // Events for Selected Day
-        Container(
-          height: 200,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            border: Border(top: BorderSide(color: Colors.grey[300]!)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Events for ${_getDayName(_selectedDay)}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Consumer<AuthProvider>(
-                    builder: (context, authProvider, child) {
-                      final userRole = authProvider.user?['role'] ?? 'Super Admin';
-                      if (userRole == 'Super Admin' || userRole == 'School Admin') {
-                        return TextButton.icon(
-                          onPressed: () => _showAddEventDialog(context),
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Add Event'),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _buildEventsList(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Monthly event list view for Parents and Teachers
-  Widget _buildUserCalendarView() {
-    final currentMonthEvents = _events.where((event) {
-      return event['date'].year == _focusedDay.year && 
-             event['date'].month == _focusedDay.month;
-    }).toList();
-    
-    // Sort events by date
-    currentMonthEvents.sort((a, b) => a['date'].compareTo(b['date']));
-
-    return Column(
-      children: [
-        // Month Header
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.purple[50],
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${_getMonthName(_focusedDay.month)} ${_focusedDay.year}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.purple[700],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Month Events List
-        Expanded(
-          child: currentMonthEvents.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.event_busy,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No events for ${_getMonthName(_focusedDay.month)} ${_focusedDay.year}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: currentMonthEvents.length,
-                  itemBuilder: (context, index) {
-                    final event = currentMonthEvents[index];
-                    return _buildEventCard(event);
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEventCard(Map<String, dynamic> event) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: event['color'],
-            shape: BoxShape.circle,
-          ),
-        ),
-        title: Text(
-          event['title'],
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(event['description']),
-            const SizedBox(height: 4),
-            Row(
+          // Events for Selected Day
+          Container(
+            height: 200,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border(top: BorderSide(color: Colors.grey[300]!)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
                 Text(
-                  '${_getDayName(event['date'])} - ${_getMonthName(event['date'].month)} ${event['date'].day}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                  'Events for ${_getDayName(_selectedDay)}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _buildEventsList(),
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: event['color']?.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: event['color'] ?? Colors.grey),
-              ),
-              child: Text(
-                event['type'],
-                style: TextStyle(
-                  color: event['color'] ?? Colors.grey,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        isThreeLine: true,
+          ),
+        ],
       ),
     );
   }
@@ -621,23 +357,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
     );
   }
-
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN') {
-      return FloatingActionButton(
-        onPressed: () => _showAddEventDialog(context),
-        backgroundColor: Colors.orange[600],
-        child: const Icon(Icons.add, color: Colors.white),
-      );
-    }
-    return null;
-  }
-
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
-  }
 }
 
 class _AddEditEventDialog extends StatefulWidget {
@@ -661,23 +380,12 @@ class _AddEditEventDialogState extends State<_AddEditEventDialog> {
   String _recurrenceType = 'None';
 
   final List<String> _eventTypes = [
-    'Event', 'Meeting', 'Competition', 'Holiday', 'Exam', 'Celebration', 'Other'
+    'Event', 'Meeting', 'Competition', 'Holiday', 'Exam', 'Other'
   ];
 
   final List<String> _recurrenceTypes = [
     'None', 'Daily', 'Weekly', 'Monthly', 'Yearly'
   ];
-
-  // Color mapping for event types - each event type gets a specific color
-  final Map<String, Color> _eventTypeColors = {
-    'Event': Colors.blue,
-    'Meeting': Colors.green,
-    'Competition': Colors.orange,
-    'Holiday': Colors.red,
-    'Exam': Colors.purple,
-    'Celebration': Colors.teal,
-    'Other': Colors.indigo,
-  };
 
   final List<Color> _colorOptions = [
     Colors.blue, Colors.green, Colors.orange, Colors.purple, 
@@ -789,57 +497,17 @@ class _AddEditEventDialogState extends State<_AddEditEventDialog> {
                 items: _eventTypes.map((type) {
                   return DropdownMenuItem(
                     value: type,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: _eventTypeColors[type] ?? Colors.grey,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(type),
-                      ],
-                    ),
+                    child: Text(type),
                   );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _selectedType = value ?? 'Event';
-                    // Automatically set color based on event type
-                    _selectedColor = _eventTypeColors[value ?? 'Event'] ?? Colors.blue;
                   });
                 },
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text('Event Color:', style: TextStyle(fontSize: 16)),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _selectedColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Auto-assigned for ${_selectedType}',
-                      style: TextStyle(
-                        color: _selectedColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Color automatically set based on event type. You can customize below:',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
+              const Text('Event Color:', style: TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,

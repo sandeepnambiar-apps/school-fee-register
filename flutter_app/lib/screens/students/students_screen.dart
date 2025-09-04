@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/student_provider.dart';
-import '../../models/student.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
-import '../../widgets/common/cartoon_children_icon.dart';
+import '../../widgets/common/app_branding.dart';
 import 'package:go_router/go_router.dart';
 
 class StudentsScreen extends StatefulWidget {
@@ -38,10 +37,9 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final userRole = auth.user?['role'] ?? 'Super Admin';
     
     return Scaffold(
-              backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(_getTitle(userRole)),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.lightBlue[600],
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -77,7 +75,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
           return Column(
             children: [
-              if (userRole == 'PARENT') _buildKidProfile(studentProvider, auth),
+              const AppBranding(),
+              if (userRole == 'Parent') _buildKidProfile(studentProvider, auth),
               if (userRole == 'Teacher') _buildClassInfo(studentProvider, auth),
               if (userRole == 'Super Admin' || userRole == 'School Admin') _buildSearchBar(studentProvider),
               _buildStudentsList(studentProvider, userRole),
@@ -85,7 +84,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
           );
         },
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      floatingActionButton: _buildFloatingActionButton(userRole),
     );
   }
 
@@ -96,74 +95,31 @@ class _StudentsScreenState extends State<StudentsScreen> {
       case 'Teacher':
         return 'My Class';
       default:
-        return 'Kid Profile';
+        return 'Students';
     }
   }
 
   List<Widget> _buildActions(String userRole) {
-    List<Widget> actions = [
-      // Kidsy Branding in App Bar
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Kid',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[600],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    'sy',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ];
-    
     if (userRole == 'Teacher') {
-      actions.add(
+      return [
         IconButton(
           icon: const Icon(Icons.assignment),
           onPressed: () => context.go('/homework'),
           tooltip: 'Add Homework',
         ),
-      );
+      ];
     }
-    return actions;
+    return [];
   }
 
   Widget _buildKidProfile(StudentProvider studentProvider, AuthProvider auth) {
-    final kidId = auth.user?['kidId']?.toString();
+    final kidId = auth.user?['kidId'] as int?;
     final kid = kidId != null ? studentProvider.getStudentById(kidId) : null;
     
     if (kid == null) {
       return const Padding(
         padding: EdgeInsets.all(16),
         child: Card(
-          color: Colors.white,
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Text('No kid profile found', style: TextStyle(fontSize: 16)),
@@ -186,7 +142,14 @@ class _StudentsScreenState extends State<StudentsScreen> {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.lightBlue[100],
-                    child: CartoonChildrenIcon(size: 44, color: Colors.lightBlue[600]),
+                    child: Text(
+                      (kid['name'] as String)[0].toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.lightBlue[700],
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -194,23 +157,24 @@ class _StudentsScreenState extends State<StudentsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          kid.name,
+                          kid['name'],
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        Text('Class ${kid.className} - Section ${kid.section}'),
+                        Text('Class ${kid['class']} - Section ${kid['section']}'),
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildDetailRow('Father', kid.fatherName),
-                              _buildDetailRow('Father Phone', kid.fatherPhone),
-              _buildDetailRow('Parent Email', kid.parentEmail),
-              _buildDetailRow('Address', kid.address),
+              _buildDetailRow('Parent', kid['parentName']),
+              _buildDetailRow('Parent Phone', kid['parentPhone']),
+              _buildDetailRow('Email', kid['email']),
+              _buildDetailRow('Phone', kid['phone']),
+              _buildDetailRow('Address', kid['address']),
             ],
           ),
         ),
@@ -242,7 +206,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ),
                   ),
                   Text(
-                    '${students.length} Kids',
+                    '${students.length} Students',
                     style: TextStyle(
                       color: Colors.lightBlue[600],
                       fontWeight: FontWeight.w600,
@@ -261,7 +225,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: CustomTextField(
-        label: 'Search Kids',
+        label: 'Search Students',
         hint: 'Search by name, email, class, or parent name',
         controller: _searchController,
         prefixIcon: const Icon(Icons.search),
@@ -271,10 +235,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
   }
 
   Widget _buildStudentsList(StudentProvider studentProvider, String userRole) {
-    List<Student> studentsToShow;
+    List<Map<String, dynamic>> studentsToShow;
     
-    if (userRole == 'PARENT') {
-      final kidId = context.read<AuthProvider>().user?['kidId']?.toString();
+    if (userRole == 'Parent') {
+      final kidId = context.read<AuthProvider>().user?['kidId'] as int?;
       studentsToShow = kidId != null ? [studentProvider.getStudentById(kidId)!] : [];
     } else if (userRole == 'Teacher') {
       final className = context.read<AuthProvider>().user?['class'] as String? ?? '10A';
@@ -287,7 +251,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
       return const Expanded(
         child: Center(
           child: Text(
-            'No kids found',
+            'No students found',
             style: TextStyle(fontSize: 18, color: Colors.grey),
           ),
         ),
@@ -306,9 +270,8 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 
-  Widget? _buildFloatingActionButton() {
-    final userRole = this.userRole;
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN') {
+  Widget? _buildFloatingActionButton(String userRole) {
+    if (userRole == 'Super Admin' || userRole == 'School Admin') {
       return FloatingActionButton(
         onPressed: () => _showAddEditStudentDialog(context, null),
         backgroundColor: Colors.lightBlue[700],
@@ -318,32 +281,31 @@ class _StudentsScreenState extends State<StudentsScreen> {
     return null;
   }
 
-  String get userRole {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.user?['role'] ?? 'USER';
-  }
-
-  Widget _buildStudentCard(BuildContext context, Student student, StudentProvider provider, String userRole) {
-          return Card(
-        color: Colors.white,
+  Widget _buildStudentCard(BuildContext context, Map<String, dynamic> student, StudentProvider provider, String userRole) {
+    return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.lightBlue[100],
-          radius: 20,
-          child: CartoonChildrenIcon(size: 32, color: Colors.lightBlue[600]),
+          child: Text(
+            student['name'][0].toUpperCase(),
+            style: TextStyle(
+              color: Colors.lightBlue[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
         title: Text(
-          student.name,
+          student['name'],
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Class: ${student.className} - Section: ${student.section}'),
-            if (userRole != 'PARENT') Text('Father: ${student.fatherName}'),
-            Text('Status: ${student.isActive ? 'Active' : 'Inactive'}'),
+            Text('Class: ${student['class']} - Section: ${student['section']}'),
+            if (userRole != 'Parent') Text('Parent: ${student['parentName']}'),
+            Text('Status: ${student['status']}'),
           ],
         ),
         trailing: userRole == 'Super Admin' || userRole == 'School Admin' 
@@ -400,7 +362,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 
-  void _showAddEditStudentDialog(BuildContext context, Student? student) {
+  void _showAddEditStudentDialog(BuildContext context, Map<String, dynamic>? student) {
     final isEditing = student != null;
     final title = isEditing ? 'Edit Student' : 'Add New Student';
     
@@ -439,7 +401,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 
-  void _showStudentDetailsDialog(BuildContext context, Student student) {
+  void _showStudentDetailsDialog(BuildContext context, Map<String, dynamic> student) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -449,26 +411,16 @@ class _StudentsScreenState extends State<StudentsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('Name', student.name),
-              _buildDetailRow('Class', student.className),
-              _buildDetailRow('Section', student.section),
-              _buildDetailRow('Gender', student.gender),
-              _buildDetailRow('Email', student.email),
-              _buildDetailRow('Father Name', student.fatherName),
-              _buildDetailRow('Father Phone', student.fatherPhone),
-              _buildDetailRow('Mother Name', student.motherName),
-              _buildDetailRow('Mother Phone', student.motherPhone),
-              _buildDetailRow('Address', student.address),
-              // NEW: Additional fields
-              _buildDetailRow('Kid Aadhaar', student.kidAadhaar),
-              _buildDetailRow('PEN', student.pen),
-              _buildDetailRow('Father Aadhaar', student.fatherAadhaar),
-              _buildDetailRow('Mother Aadhaar', student.motherAadhaar),
-              _buildDetailRow('Caste', student.caste),
-              _buildDetailRow('Category', student.category),
-              _buildDetailRow('Parent Login Code', student.parentLoginCode),
-              _buildDetailRow('Login Code Used', student.parentLoginCodeUsed ? 'Yes' : 'No'),
-              _buildDetailRow('Status', student.isActive ? 'Active' : 'Inactive'),
+              _buildDetailRow('Name', student['name']),
+              _buildDetailRow('Email', student['email']),
+              _buildDetailRow('Phone', student['phone']),
+              _buildDetailRow('Class', student['class']),
+              _buildDetailRow('Section', student['section']),
+              _buildDetailRow('Admission Date', student['admissionDate']),
+              _buildDetailRow('Parent Name', student['parentName']),
+              _buildDetailRow('Parent Phone', student['parentPhone']),
+              _buildDetailRow('Address', student['address']),
+              _buildDetailRow('Status', student['status']),
             ],
           ),
         ),
@@ -501,12 +453,12 @@ class _StudentsScreenState extends State<StudentsScreen> {
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, Student student, StudentProvider provider) {
+  void _showDeleteConfirmationDialog(BuildContext context, Map<String, dynamic> student, StudentProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Student'),
-        content: Text('Are you sure you want to delete ${student.name}? This action cannot be undone.'),
+        content: Text('Are you sure you want to delete ${student['name']}? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -517,10 +469,10 @@ class _StudentsScreenState extends State<StudentsScreen> {
             backgroundColor: Colors.red,
             onPressed: () async {
               Navigator.of(context).pop();
-              await provider.deleteStudent(student.id);
+              await provider.deleteStudent(student['id']);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${student.name} deleted successfully')),
+                  SnackBar(content: Text('${student['name']} deleted successfully')),
                 );
               }
             },
@@ -532,7 +484,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
 }
 
 class _AddEditStudentForm extends StatefulWidget {
-  final Student? student;
+  final Map<String, dynamic>? student;
   final Function(Map<String, dynamic>) onSave;
 
   const _AddEditStudentForm({this.student, required this.onSave});
@@ -543,72 +495,40 @@ class _AddEditStudentForm extends StatefulWidget {
 
 class _AddEditStudentFormState extends State<_AddEditStudentForm> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _classController = TextEditingController();
   final _sectionController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _fatherNameController = TextEditingController();
-  final _fatherPhoneController = TextEditingController();
-  final _motherNameController = TextEditingController();
-  final _motherPhoneController = TextEditingController();
+  final _parentNameController = TextEditingController();
+  final _parentPhoneController = TextEditingController();
   final _addressController = TextEditingController();
-  // NEW: Additional field controllers
-  final _kidAadhaarController = TextEditingController();
-  final _penController = TextEditingController();
-  final _fatherAadhaarController = TextEditingController();
-  final _motherAadhaarController = TextEditingController();
-  final _casteController = TextEditingController();
-  final _categoryController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     if (widget.student != null) {
-      // Split existing name into first and last name
-      final nameParts = widget.student!.name.split(' ');
-      _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
-      _lastNameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-      _classController.text = widget.student!.className;
-      _sectionController.text = widget.student!.section;
-      _genderController.text = widget.student!.gender;
-      _emailController.text = widget.student!.email;
-              _fatherNameController.text = widget.student!.fatherName;
-              _fatherPhoneController.text = widget.student!.fatherPhone;
-      _motherNameController.text = widget.student!.motherName;
-      _motherPhoneController.text = widget.student!.motherPhone;
-      _addressController.text = widget.student!.address;
-      // NEW: Populate additional fields
-      _kidAadhaarController.text = widget.student!.kidAadhaar;
-      _penController.text = widget.student!.pen;
-      _fatherAadhaarController.text = widget.student!.fatherAadhaar;
-      _motherAadhaarController.text = widget.student!.motherAadhaar;
-      _casteController.text = widget.student!.caste;
-      _categoryController.text = widget.student!.category;
+      _nameController.text = widget.student!['name'];
+      _emailController.text = widget.student!['email'];
+      _phoneController.text = widget.student!['phone'];
+      _classController.text = widget.student!['class'];
+      _sectionController.text = widget.student!['section'];
+      _parentNameController.text = widget.student!['parentName'];
+      _parentPhoneController.text = widget.student!['parentPhone'];
+      _addressController.text = widget.student!['address'];
     }
   }
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
     _classController.dispose();
     _sectionController.dispose();
-    _genderController.dispose();
-    _emailController.dispose();
-    _fatherNameController.dispose();
-    _fatherPhoneController.dispose();
-    _motherNameController.dispose();
-    _motherPhoneController.dispose();
+    _parentNameController.dispose();
+    _parentPhoneController.dispose();
     _addressController.dispose();
-    // NEW: Dispose additional controllers
-    _kidAadhaarController.dispose();
-    _penController.dispose();
-    _fatherAadhaarController.dispose();
-    _motherAadhaarController.dispose();
-    _casteController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -620,75 +540,51 @@ class _AddEditStudentFormState extends State<_AddEditStudentForm> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CustomTextField(
-            label: 'First Name',
-            controller: _firstNameController,
-            validator: (value) => value?.isEmpty == true ? 'First name is required' : null,
-          ),
-          CustomTextField(
-            label: 'Last Name',
-            controller: _lastNameController,
-            validator: (value) => value?.isEmpty == true ? 'Last name is required' : null,
+            label: 'Student Name',
+            controller: _nameController,
+            validator: (value) => value?.isEmpty == true ? 'Name is required' : null,
           ),
           const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Class',
-            controller: _classController,
-            validator: (value) => value?.isEmpty == true ? 'Class is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Section',
-            controller: _sectionController,
-            validator: (value) => value?.isEmpty == true ? 'Section is required' : null,
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _genderController.text.isEmpty ? null : _genderController.text,
-            decoration: const InputDecoration(
-              labelText: 'Gender',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'Male', child: Text('Male')),
-              DropdownMenuItem(value: 'Female', child: Text('Female')),
-              DropdownMenuItem(value: 'Other', child: Text('Other')),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                _genderController.text = value;
-              }
-            },
-            validator: (value) => value == null || value.isEmpty ? 'Gender is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Email',
+          EmailTextField(
             controller: _emailController,
             validator: (value) => value?.isEmpty == true ? 'Email is required' : null,
           ),
           const SizedBox(height: 16),
+          PhoneTextField(
+            controller: _phoneController,
+            validator: (value) => value?.isEmpty == true ? 'Phone is required' : null,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: CustomTextField(
+                  label: 'Class',
+                  controller: _classController,
+                  validator: (value) => value?.isEmpty == true ? 'Class is required' : null,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: CustomTextField(
+                  label: 'Section',
+                  controller: _sectionController,
+                  validator: (value) => value?.isEmpty == true ? 'Section is required' : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           CustomTextField(
-            label: 'Father Name',
-            controller: _fatherNameController,
-            validator: (value) => value?.isEmpty == true ? 'Father name is required' : null,
+            label: 'Parent Name',
+            controller: _parentNameController,
+            validator: (value) => value?.isEmpty == true ? 'Parent name is required' : null,
           ),
           const SizedBox(height: 16),
           PhoneTextField(
-            label: 'Father Phone',
-            controller: _fatherPhoneController,
-            validator: (value) => value?.isEmpty == true ? 'Father phone is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Mother Name',
-            controller: _motherNameController,
-            validator: (value) => value?.isEmpty == true ? 'Mother name is required' : null,
-          ),
-          const SizedBox(height: 16),
-          PhoneTextField(
-            label: 'Mother Phone',
-            controller: _motherPhoneController,
-            validator: (value) => value?.isEmpty == true ? 'Mother phone is required' : null,
+            label: 'Parent Phone',
+            controller: _parentPhoneController,
+            validator: (value) => value?.isEmpty == true ? 'Parent phone is required' : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -696,59 +592,6 @@ class _AddEditStudentFormState extends State<_AddEditStudentForm> {
             controller: _addressController,
             maxLines: 3,
             validator: (value) => value?.isEmpty == true ? 'Address is required' : null,
-          ),
-          const SizedBox(height: 16),
-          // NEW: Additional fields
-          CustomTextField(
-            label: 'Kid Aadhaar',
-            controller: _kidAadhaarController,
-            validator: (value) => value?.isEmpty == true ? 'Kid Aadhaar is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'PEN',
-            controller: _penController,
-            validator: (value) => value?.isEmpty == true ? 'PEN is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Father Aadhaar',
-            controller: _fatherAadhaarController,
-            validator: (value) => value?.isEmpty == true ? 'Father Aadhaar is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Mother Aadhaar',
-            controller: _motherAadhaarController,
-            validator: (value) => value?.isEmpty == true ? 'Mother Aadhaar is required' : null,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Caste',
-            controller: _casteController,
-            validator: (value) => value?.isEmpty == true ? 'Caste is required' : null,
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _categoryController.text.isEmpty ? null : _categoryController.text,
-            decoration: const InputDecoration(
-              labelText: 'Category',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'General', child: Text('General')),
-              DropdownMenuItem(value: 'OBC', child: Text('OBC')),
-              DropdownMenuItem(value: 'SC', child: Text('SC')),
-              DropdownMenuItem(value: 'ST', child: Text('ST')),
-              DropdownMenuItem(value: 'EWS', child: Text('EWS')),
-              DropdownMenuItem(value: 'Other', child: Text('Other')),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                _categoryController.text = value;
-              }
-            },
-            validator: (value) => value == null || value.isEmpty ? 'Category is required' : null,
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -758,27 +601,17 @@ class _AddEditStudentFormState extends State<_AddEditStudentForm> {
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   final studentData = {
-                    'id': widget.student?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                    'name': '${_firstNameController.text} ${_lastNameController.text}',
-                    'parentEmail': '', // Not in new form
-                    'className': _classController.text,
-                    'section': _sectionController.text,
-                    'gender': _genderController.text,
+                    'id': widget.student?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                    'name': _nameController.text,
                     'email': _emailController.text,
-                    'admissionDate': widget.student?.admissionDate.toString() ?? DateTime.now().toString(),
-                    'parentName': _fatherNameController.text, // Keep as parentName for form compatibility
-                    'parentPhone': _fatherPhoneController.text,
-                    'motherName': _motherNameController.text,
-                    'motherPhone': _motherPhoneController.text,
+                    'phone': _phoneController.text,
+                    'class': _classController.text,
+                    'section': _sectionController.text,
+                    'admissionDate': widget.student?['admissionDate'] ?? DateTime.now().toString(),
+                    'parentName': _parentNameController.text,
+                    'parentPhone': _parentPhoneController.text,
                     'address': _addressController.text,
-                    'isActive': widget.student?.isActive ?? true,
-                    // NEW: Additional fields
-                    'kidAadhaar': _kidAadhaarController.text,
-                    'pen': _penController.text,
-                    'fatherAadhaar': _fatherAadhaarController.text,
-                    'motherAadhaar': _motherAadhaarController.text,
-                    'caste': _casteController.text,
-                    'category': _categoryController.text,
+                    'status': widget.student?['status'] ?? 'Active',
                   };
                   widget.onSave(studentData);
                 }

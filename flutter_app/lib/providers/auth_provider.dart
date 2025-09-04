@@ -135,68 +135,6 @@ class AuthProvider extends ChangeNotifier {
     _user = updatedUser;
     notifyListeners();
   }
-
-  // Parent login with mobile and login code
-  Future<bool> loginWithMobileAndCode(String mobileNumber, String loginCode) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    
-    try {
-      final result = await _authService.loginWithMobileAndCode(mobileNumber, loginCode);
-      if (result['success'] == true) {
-        _isAuthenticated = true;
-        _user = result['user'];
-        _error = null;
-        notifyListeners();
-        return true;
-      } else {
-        _error = result['message'];
-        _isAuthenticated = false;
-        _user = null;
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _error = e.toString();
-      _isAuthenticated = false;
-      _user = null;
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Setup parent password
-  Future<bool> setupParentPassword(String mobileNumber, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    
-    try {
-      final result = await _authService.setupParentPassword(mobileNumber, password);
-      if (result['success'] == true) {
-        _user = result['user'];
-        _error = null;
-        notifyListeners();
-        return true;
-      } else {
-        _error = result['message'];
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 }
-
 
 

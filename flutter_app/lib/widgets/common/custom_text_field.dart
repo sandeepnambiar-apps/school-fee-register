@@ -163,7 +163,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             ),
             filled: widget.filled,
             fillColor: widget.fillColor ?? 
-                (widget.filled ? Colors.white : Colors.transparent),
+                (widget.filled ? Colors.grey[50] : Colors.transparent),
             errorStyle: TextStyle(
               color: Colors.red[600],
               fontSize: 12,
@@ -307,6 +307,5 @@ class PhoneTextField extends StatelessWidget {
     );
   }
 }
-
 
 
