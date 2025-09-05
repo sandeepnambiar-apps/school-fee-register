@@ -1,6 +1,7 @@
 package com.school.dto;
 
 import lombok.Data;
+import java.util.Map;
 
 @Data
 public class LoginResponseDTO {
@@ -13,4 +14,5 @@ public class LoginResponseDTO {
     private Long schoolId;
     private String message;
     private boolean success;
+    private Map<String, Object> user; // New field for unified user data
 }

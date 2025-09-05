@@ -4,198 +4,200 @@ import '../services/auth_service.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   
-  bool _isAuthenticated = false;
-  bool _isLoading = false;
   Map<String, dynamic>? _user;
   String? _error;
+  bool _isLoading = false;
 
-  // Getters
-  bool get isAuthenticated => _isAuthenticated;
-  bool get isLoading => _isLoading;
   Map<String, dynamic>? get user => _user;
   String? get error => _error;
+  bool get isLoading => _isLoading;
 
-  // Initialize the provider
+  // Initialize provider
   Future<void> initialize() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      _authService.initialize();
-      _isAuthenticated = await _authService.isAuthenticated();
-      if (_isAuthenticated) {
-        _user = await _authService.getCurrentUser();
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    await _loadCurrentUser();
   }
 
-  // Login method
-  Future<bool> login(String username, String password) async {
-    _isLoading = true;
-    _error = null;
+  // Load current user from storage
+  Future<void> _loadCurrentUser() async {
+    _user = await _authService.getCurrentUser();
     notifyListeners();
+  }
+
+  // Unified login method for all user types
+  Future<Map<String, dynamic>> login(String mobileNumber, String password) async {
+    _setLoading(true);
+    _clearError();
 
     try {
-      final result = await _authService.login(username, password);
+      final result = await _authService.login(mobileNumber, password);
       
-      if (result['success'] == true) {
-        _isAuthenticated = true;
+      if (result['success']) {
         _user = result['user'];
-        _error = null;
-        notifyListeners();
-        return true;
+        _clearError();
       } else {
-        _error = result['message'];
-        _isAuthenticated = false;
-        _user = null;
-        notifyListeners();
-        return false;
+        _setError(result['message']);
       }
+      
+      return result;
     } catch (e) {
-      _error = e.toString();
-      _isAuthenticated = false;
-      _user = null;
-      notifyListeners();
-      return false;
+      _setError('Login failed: $e');
+      return {'success': false, 'message': 'Login failed: $e'};
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
-  // Logout method
+  // Mock login for development
+  Future<Map<String, dynamic>> loginMock(String mobileNumber, String password) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.loginMock(mobileNumber, password);
+      
+      if (result['success']) {
+        _user = result['user'];
+        _clearError();
+      } else {
+        _setError(result['message']);
+      }
+      
+      return result;
+    } catch (e) {
+      _setError('Login failed: $e');
+      return {'success': false, 'message': 'Login failed: $e'};
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Logout
   Future<void> logout() async {
-    _isLoading = true;
+    await _authService.logout();
+    _user = null;
+    _clearError();
     notifyListeners();
+  }
+
+  // Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    return await _authService.isLoggedIn();
+  }
+
+  // Get user role
+  Future<String?> getUserRole() async {
+    return await _authService.getUserRole();
+  }
+
+  // Get school ID
+  Future<String?> getSchoolId() async {
+    return await _authService.getSchoolId();
+  }
+
+  // Check if user is first time
+  Future<bool> isFirstTime() async {
+    return await _authService.isFirstTime();
+  }
+
+  // Check if user can access a specific school
+  Future<bool> canAccessSchool(int schoolId) async {
+    return await _authService.canAccessSchool(schoolId);
+  }
+
+  // Get accessible schools for current user
+  Future<List<int>> getAccessibleSchools() async {
+    return await _authService.getAccessibleSchools();
+  }
+
+  // Change password
+  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+    _setLoading(true);
+    _clearError();
 
     try {
-      await _authService.logout();
-      _isAuthenticated = false;
-      _user = null;
-      _error = null;
+      final result = await _authService.changePassword(currentPassword, newPassword);
+      
+      if (!result['success']) {
+        _setError(result['message']);
+      }
+      
+      return result;
     } catch (e) {
-      _error = e.toString();
+      _setError('Password change failed: $e');
+      return {'success': false, 'message': 'Password change failed: $e'};
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
-  // Check authentication status
-  Future<void> checkAuthStatus() async {
-    _isLoading = true;
+  // Forgot password
+  Future<Map<String, dynamic>> forgotPassword(String mobileNumber) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.forgotPassword(mobileNumber);
+      
+      if (!result['success']) {
+        _setError(result['message']);
+      }
+      
+      return result;
+    } catch (e) {
+      _setError('Password reset failed: $e');
+      return {'success': false, 'message': 'Password reset failed: $e'};
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Helper methods
+  void _setLoading(bool loading) {
+    _isLoading = loading;
     notifyListeners();
-
-    try {
-      _isAuthenticated = await _authService.isAuthenticated();
-      if (_isAuthenticated) {
-        _user = await _authService.getCurrentUser();
-      } else {
-        _user = null;
-      }
-      _error = null;
-    } catch (e) {
-      _error = e.toString();
-      _isAuthenticated = false;
-      _user = null;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 
-  // Refresh token
-  Future<bool> refreshToken() async {
-    try {
-      final success = await _authService.refreshToken();
-      if (success) {
-        await checkAuthStatus();
-      }
-      return success;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
+  void _setError(String error) {
+    _error = error;
+    notifyListeners();
   }
 
-  // Clear error
-  void clearError() {
+  void _clearError() {
     _error = null;
     notifyListeners();
   }
 
-  // Update user profile
-  void updateUserProfile(Map<String, dynamic> updatedUser) {
-    _user = updatedUser;
-    notifyListeners();
+  // Check if user has specific role
+  bool hasRole(String role) {
+    return _user?['role'] == role;
   }
 
-  // Parent login with mobile and login code
-  Future<bool> loginWithMobileAndCode(String mobileNumber, String loginCode) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    
-    try {
-      final result = await _authService.loginWithMobileAndCode(mobileNumber, loginCode);
-      if (result['success'] == true) {
-        _isAuthenticated = true;
-        _user = result['user'];
-        _error = null;
-        notifyListeners();
-        return true;
-      } else {
-        _error = result['message'];
-        _isAuthenticated = false;
-        _user = null;
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _error = e.toString();
-      _isAuthenticated = false;
-      _user = null;
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
+  // Check if user is Super Admin
+  bool get isSuperAdmin => hasRole('SUPER_ADMIN');
 
-  // Setup parent password
-  Future<bool> setupParentPassword(String mobileNumber, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    
-    try {
-      final result = await _authService.setupParentPassword(mobileNumber, password);
-      if (result['success'] == true) {
-        _user = result['user'];
-        _error = null;
-        notifyListeners();
-        return true;
-      } else {
-        _error = result['message'];
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
+  // Check if user is School Admin
+  bool get isSchoolAdmin => hasRole('SCHOOL_ADMIN');
+
+  // Check if user is Teacher
+  bool get isTeacher => hasRole('TEACHER');
+
+  // Check if user is Parent
+  bool get isParent => hasRole('PARENT');
+
+  // Check if user is Admin (Super Admin or School Admin)
+  bool get isAdmin => isSuperAdmin || isSchoolAdmin;
+
+  // Get user's school ID
+  int? get userSchoolId => _user?['schoolId'];
+
+  // Get user's name
+  String? get userName => _user?['name'];
+
+  // Get user's email
+  String? get userEmail => _user?['email'];
+
+  // Get user's mobile number
+  String? get userMobile => _user?['mobileNumber'];
 }
 
 

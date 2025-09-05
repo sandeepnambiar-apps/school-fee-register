@@ -1,32 +1,92 @@
 package com.school.dto;
 
-import lombok.Data;
+import com.school.entity.User.UserRole;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-
-@Data
 public class UserRegistrationDTO {
-
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-    private String username;
-
-    @NotBlank(message = "Full name is required")
-    private String fullName;
-
-    @Email(message = "Invalid email format")
-    private String email;
-
-    private String phone;
-
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    
+    private String mobileNumber;
     private String password;
-
-    @NotBlank(message = "Role is required")
-    private String role;
-
-    private Long schoolId; // School ID for multi-school support
+    private String name;
+    private String email;
+    private UserRole role;
+    private Long schoolId;
+    private String classAssigned; // For teachers
+    private String subjectTaught; // For teachers
+    private Long parentId; // For linking to Parent entity
+    
+    // Constructor
+    public UserRegistrationDTO() {}
+    
+    // Getters and Setters
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+    
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public UserRole getRole() {
+        return role;
+    }
+    
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+    
+    public Long getSchoolId() {
+        return schoolId;
+    }
+    
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
+    }
+    
+    public String getClassAssigned() {
+        return classAssigned;
+    }
+    
+    public void setClassAssigned(String classAssigned) {
+        this.classAssigned = classAssigned;
+    }
+    
+    public String getSubjectTaught() {
+        return subjectTaught;
+    }
+    
+    public void setSubjectTaught(String subjectTaught) {
+        this.subjectTaught = subjectTaught;
+    }
+    
+    public Long getParentId() {
+        return parentId;
+    }
+    
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
 }

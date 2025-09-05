@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/school_logo.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,20 +15,262 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _mobileController = TextEditingController();
-  final _loginCodeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
   bool _isLoading = false;
-  bool _isParentMode = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
     _mobileController.dispose();
-    _loginCodeController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 40),
+                
+                // School Logo
+                const Center(
+                  child: SchoolLogo(size: 120),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Welcome Text
+                Text(
+                  'Welcome to Kidsy',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const SizedBox(height: 8),
+                
+                Text(
+                  'School Management System',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // Login Form
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Mobile Number Field
+                      TextFormField(
+                        controller: _mobileController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: 'Mobile Number *',
+                          hintText: 'Enter your mobile number',
+                          prefixIcon: const Icon(Icons.phone),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your mobile number';
+                          }
+                          if (value.length < 10) {
+                            return 'Please enter a valid mobile number';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Password Field
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: !_isPasswordVisible,
+                        decoration: InputDecoration(
+                          labelText: 'Password *',
+                          hintText: 'Enter your password',
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Login Button
+                      CustomButton(
+                        text: _isLoading ? 'Logging in...' : 'Login',
+                        onPressed: _isLoading ? null : _handleLogin,
+                        backgroundColor: Colors.blue[600]!,
+                        textColor: Colors.white,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Forgot Password Link
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please contact your school administrator to reset your password.'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Demo Credentials Info
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.orange[700]),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Demo Credentials',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Use these mobile numbers to test different user roles:',
+                        style: TextStyle(color: Colors.orange[700]),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildDemoCredential('9999999999', 'Super Admin (All Schools)'),
+                      _buildDemoCredential('1111111111', 'School 1 Admin'),
+                      _buildDemoCredential('3333333333', 'School 1 Teacher'),
+                      _buildDemoCredential('6666666666', 'School 1 Parent'),
+                      _buildDemoCredential('2222222222', 'School 2 Admin'),
+                      _buildDemoCredential('5555555555', 'School 2 Teacher'),
+                      _buildDemoCredential('8888888888', 'School 2 Parent'),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Password: Any password (e.g., "password")',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Footer
+                Text(
+                  '© 2024 Kidsy School Management System',
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDemoCredential(String mobile, String role) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            '$mobile: ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.orange[700],
+            ),
+          ),
+          Text(
+            role,
+            style: TextStyle(color: Colors.orange[700]),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -42,41 +284,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      bool success;
+      
+      // Use mock login for development
+      final result = await authProvider.loginMock(
+        _mobileController.text,
+        _passwordController.text,
+      );
 
-      if (_isParentMode) {
-        // Parent login with mobile and login code
-        success = await authProvider.loginWithMobileAndCode(
-          _mobileController.text.trim(),
-          _loginCodeController.text.trim(),
+      if (result['success'] && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.green,
+          ),
         );
-      } else {
-        // Regular login with username and password
-        success = await authProvider.login(
-          _usernameController.text.trim(),
-          _passwordController.text,
+        context.go('/dashboard');
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
         );
-      }
-
-      if (success) {
-        if (mounted) {
-          context.go('/dashboard');
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.error ?? 'Login failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Login failed: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -88,311 +323,6 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Logo and Title
-                        Column(
-                          children: [
-                            const SchoolLogo(size: 80),
-                            const SizedBox(height: 24),
-                            Column(
-                              children: [
-                                Text(
-                                  'BOON',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange[600],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  'E.M School',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.orange[600],
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Sign in to your account',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.orange[600],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Enhanced Login Mode Toggle with Icons
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange[300]!),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _isParentMode = false),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: !_isParentMode ? Colors.orange[600] : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.person_outline,
-                                          color: !_isParentMode ? Colors.white : Colors.orange[600],
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Staff Login',
-                                          style: TextStyle(
-                                            color: !_isParentMode ? Colors.white : Colors.orange[600],
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _isParentMode = true),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: _isParentMode ? Colors.orange[600] : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.family_restroom,
-                                          color: _isParentMode ? Colors.white : Colors.orange[600],
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Parent Login',
-                                          style: TextStyle(
-                                            color: _isParentMode ? Colors.white : Colors.orange[600],
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Login Fields based on mode
-                        if (!_isParentMode) ...[
-                          // Username Field for Staff
-                          CustomTextField(
-                            label: 'Username/ID',
-                            hint: 'Enter your username or ID',
-                            controller: _usernameController,
-                            prefixIcon: const Icon(Icons.person_outline),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Username/ID is required';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Password Field for Staff
-                          PasswordTextField(
-                            controller: _passwordController,
-                          ),
-                        ] else ...[
-                          // Enhanced Mobile Number Field for Parents
-                          CustomTextField(
-                            label: 'Mobile Number',
-                            hint: 'Enter the mobile number registered with school',
-                            controller: _mobileController,
-                            prefixIcon: const Icon(Icons.phone),
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Mobile number is required';
-                              }
-                              if (value.length < 10) {
-                                return 'Please enter a valid 10-digit mobile number';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Enhanced Login Code Field for Parents
-                          CustomTextField(
-                            label: 'Login Code',
-                            hint: 'Enter the 6-digit code provided by your school',
-                            controller: _loginCodeController,
-                            prefixIcon: const Icon(Icons.key),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Login code is required';
-                              }
-                              if (value.length != 6) {
-                                return 'Login code must be 6 characters';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-
-                        // Enhanced Login Button
-                        PrimaryButton(
-                          text: _isParentMode ? 'Verify & Setup Account' : 'Sign In',
-                          onPressed: _handleLogin,
-                          isLoading: _isLoading,
-                          width: double.infinity,
-                          backgroundColor: Colors.orange[600],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Helpful Information Section for Parents
-                        if (_isParentMode) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.orange[300]!),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.info_outline, color: Colors.orange[600], size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'How to get your login code?',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.orange[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '• Contact your school administrator\n'
-                                  '• Check your SMS/email from school\n'
-                                  '• Ask your child\'s class teacher',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        
-                        // Enhanced Demo Credentials
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange[300]!),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Demo Credentials',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.orange[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                !_isParentMode 
-                                  ? 'Staff Demo:\n'
-                                    '• Super Admin: superadmin1 / super123\n'
-                                    '• School Admin: schooladmin / school123\n'
-                                    '• Teacher: teacher / teacher123'
-                                  : 'Parent Demo:\n'
-                                    '• Mobile: 9876543210 | Code: ABC123\n'
-                                    '• Mobile: 9876543211 | Code: DEF456\n'
-                                    '• Contact school for your code',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange[600],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

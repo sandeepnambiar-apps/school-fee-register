@@ -30,7 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Check authentication
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
-      if (!authProvider.isAuthenticated) {
+      if (authProvider.user == null) {
         context.go('/login');
       }
     });

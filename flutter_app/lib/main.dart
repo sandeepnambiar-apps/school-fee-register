@@ -155,9 +155,13 @@ final _router = GoRouter(
       path: '/parent-registration',
       builder: (context, state) => const ParentRegistrationScreen(),
     ),
-    GoRoute(
-      path: '/my-classes',
-      builder: (context, state) => const MyClassesScreen(),
-    ),
+            GoRoute(
+          path: '/my-classes',
+          builder: (context, state) => const MyClassesScreen(),
+        ),
+        GoRoute(
+          path: '/user-management',
+          builder: (context, state) => const UserManagementScreen(),
+        ),
   ],
 );
