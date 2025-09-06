@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
+import 'dart:convert';
 import '../services/api_service.dart';
 
 class AuthService {
@@ -37,10 +38,17 @@ class AuthService {
         await _storage.write(key: 'school_id', value: userData['schoolId']?.toString() ?? '');
         await _storage.write(key: 'is_first_time', value: userData['isFirstTime'].toString());
         
+        // Extract school_id from JWT token for additional security
+        final schoolIdFromJWT = await _extractSchoolIdFromToken(responseData['token']);
+        if (schoolIdFromJWT != null) {
+          await _storage.write(key: 'jwt_school_id', value: schoolIdFromJWT.toString());
+        }
+        
         return {
           'success': true,
           'user': userData,
-          'message': 'Login successful',
+          'message': responseData['message'] ?? 'Login successful',
+          'requiresPasswordChange': responseData['requiresPasswordChange'] ?? false,
         };
       } else {
         return {
@@ -208,6 +216,22 @@ class AuthService {
     }
   }
 
+  // Get current school ID from JWT (more secure)
+  Future<int?> getCurrentSchoolId() async {
+    try {
+      final schoolIdString = await _storage.read(key: 'jwt_school_id');
+      if (schoolIdString != null) {
+        return int.tryParse(schoolIdString);
+      }
+      
+      // Fallback to regular school_id
+      final fallbackSchoolId = await _storage.read(key: 'school_id');
+      return int.tryParse(fallbackSchoolId ?? '');
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Parse user data from storage
   Map<String, dynamic> _parseUserData(String userData) {
     try {
@@ -360,6 +384,67 @@ class AuthService {
       };
     }
   }
+
+  // Verify reset OTP
+  Future<Map<String, dynamic>> verifyResetOTP(String mobileNumber, String otp) async {
+    try {
+      final response = await _apiService.callService(
+        '/api/auth/verify-reset-otp',
+        method: 'POST',
+        data: {
+          'mobileNumber': mobileNumber,
+          'otp': otp,
+        },
+      );
+
+      final responseData = response.data as Map<String, dynamic>;
+      
+      return {
+        'success': responseData['success'] ?? false,
+        'message': responseData['message'] ?? 'OTP verification failed',
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error. Please try again.',
+      };
+    }
+  }
+
+  // Extract school_id from JWT token
+  Future<int?> _extractSchoolIdFromToken(String token) async {
+    try {
+      // Simple JWT parsing (in production, use a proper JWT library)
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      
+      // Decode payload (base64url)
+      String payload = parts[1];
+      // Add padding if needed
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+      
+      // Replace URL-safe characters
+      payload = payload.replaceAll('-', '+').replaceAll('_', '/');
+      
+      // Decode base64 using dart:convert
+      final decodedBytes = base64Decode(payload);
+      final decodedString = String.fromCharCodes(decodedBytes);
+      
+      // Parse JSON
+      final payloadMap = jsonDecode(decodedString) as Map<String, dynamic>;
+      
+      // Extract school_id
+      final schoolId = payloadMap['schoolId'];
+      if (schoolId != null) {
+        return int.tryParse(schoolId.toString());
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error parsing JWT: $e');
+      return null;
+    }
+  }
 }
-
-

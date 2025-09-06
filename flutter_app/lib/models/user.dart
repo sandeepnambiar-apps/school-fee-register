@@ -1,143 +1,105 @@
 class User {
   final String id;
-  final String username;
+  final String mobileNumber;
   final String fullName;
+  final String username;
   final String email;
-  final String phone;
   final String role;
-  final String? schoolId; // NULL for Super Admin
-  final String status; // ACTIVE, INACTIVE, SUSPENDED
+  final String? schoolId;
+  final String? classAssigned;
+  final String? subjectTaught;
+  final String status;
+  final bool isActive;
+  final bool isFirstTime;
   final DateTime createdAt;
-  final DateTime? lastLoginAt;
-  final List<String> permissions;
-  final String? profileImage;
-  final String? department; // For teachers
-  final String? subject; // For teachers
-  final String? kidId; // For parents
+  final DateTime? updatedAt;
 
   User({
     required this.id,
-    required this.username,
+    required this.mobileNumber,
     required this.fullName,
+    required this.username,
     required this.email,
-    required this.phone,
     required this.role,
     this.schoolId,
-    this.status = 'ACTIVE',
+    this.classAssigned,
+    this.subjectTaught,
+    required this.status,
+    required this.isActive,
+    required this.isFirstTime,
     required this.createdAt,
-    this.lastLoginAt,
-    this.permissions = const [],
-    this.profileImage,
-    this.department,
-    this.subject,
-    this.kidId,
+    this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id']?.toString() ?? '',
-      username: json['username'] ?? '',
-      fullName: json['fullName'] ?? json['name'] ?? '',
+      mobileNumber: json['mobileNumber'] ?? '',
+      fullName: json['name'] ?? json['fullName'] ?? '',
+      username: json['username'] ?? json['mobileNumber'] ?? '',
       email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
       role: json['role'] ?? '',
       schoolId: json['schoolId']?.toString(),
+      classAssigned: json['classAssigned'],
+      subjectTaught: json['subjectTaught'],
       status: json['status'] ?? 'ACTIVE',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
-          : DateTime.now(),
-      lastLoginAt: json['lastLoginAt'] != null 
-          ? DateTime.parse(json['lastLoginAt']) 
-          : null,
-      permissions: json['permissions'] != null 
-          ? List<String>.from(json['permissions'])
-          : [],
-      profileImage: json['profileImage'],
-      department: json['department'],
-      subject: json['subject'],
-      kidId: json['kidId']?.toString(),
+      isActive: json['isActive'] ?? true,
+      isFirstTime: json['isFirstTime'] ?? false,
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'username': username,
+      'mobileNumber': mobileNumber,
       'fullName': fullName,
+      'username': username,
       'email': email,
-      'phone': phone,
       'role': role,
       'schoolId': schoolId,
+      'classAssigned': classAssigned,
+      'subjectTaught': subjectTaught,
       'status': status,
+      'isActive': isActive,
+      'isFirstTime': isFirstTime,
       'createdAt': createdAt.toIso8601String(),
-      'lastLoginAt': lastLoginAt?.toIso8601String(),
-      'permissions': permissions,
-      'profileImage': profileImage,
-      'department': department,
-      'subject': subject,
-      'kidId': kidId,
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 
   User copyWith({
     String? id,
-    String? username,
+    String? mobileNumber,
     String? fullName,
+    String? username,
     String? email,
-    String? phone,
     String? role,
     String? schoolId,
+    String? classAssigned,
+    String? subjectTaught,
     String? status,
+    bool? isActive,
+    bool? isFirstTime,
     DateTime? createdAt,
-    DateTime? lastLoginAt,
-    List<String>? permissions,
-    String? profileImage,
-    String? department,
-    String? subject,
-    String? kidId,
+    DateTime? updatedAt,
   }) {
     return User(
       id: id ?? this.id,
-      username: username ?? this.username,
+      mobileNumber: mobileNumber ?? this.mobileNumber,
       fullName: fullName ?? this.fullName,
+      username: username ?? this.username,
       email: email ?? this.email,
-      phone: phone ?? this.phone,
       role: role ?? this.role,
       schoolId: schoolId ?? this.schoolId,
+      classAssigned: classAssigned ?? this.classAssigned,
+      subjectTaught: subjectTaught ?? this.subjectTaught,
       status: status ?? this.status,
+      isActive: isActive ?? this.isActive,
+      isFirstTime: isFirstTime ?? this.isFirstTime,
       createdAt: createdAt ?? this.createdAt,
-      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
-      permissions: permissions ?? this.permissions,
-      profileImage: profileImage ?? this.profileImage,
-      department: department ?? this.department,
-      subject: subject ?? this.subject,
-      kidId: kidId ?? this.kidId,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-
-  @override
-  String toString() {
-    return 'User(id: $id, username: $username, fullName: $fullName, role: $role, schoolId: $schoolId, status: $status)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is User && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  // Helper methods
-  bool get isSuperAdmin => role == 'Super Admin';
-  bool get isSchoolAdmin => role == 'School Admin';
-  bool get isTeacher => role == 'Teacher';
-  bool get isParent => role == 'Parent';
-  bool get isStudent => role == 'Student';
-  bool get isActive => status == 'ACTIVE';
-  bool get isInactive => status == 'INACTIVE';
-  bool get isSuspended => status == 'SUSPENDED';
 }
-
-

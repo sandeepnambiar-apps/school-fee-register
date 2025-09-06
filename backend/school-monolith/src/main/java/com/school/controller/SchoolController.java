@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/schools")
@@ -18,6 +19,29 @@ public class SchoolController {
 
     @Autowired
     private SchoolService schoolService;
+
+    /**
+     * Validate school code
+     */
+    @PostMapping("/validate-code")
+    public ResponseEntity<?> validateSchoolCode(@RequestBody Map<String, String> request) {
+        try {
+            String schoolCode = request.get("schoolCode");
+            if (schoolCode == null || schoolCode.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "School code is required"));
+            }
+            
+            boolean isValid = schoolService.validateSchoolCode(schoolCode.trim().toUpperCase());
+            if (isValid) {
+                return ResponseEntity.ok(Map.of("success", true, "message", "Valid school code"));
+            } else {
+                return ResponseEntity.ok(Map.of("success", false, "message", "Invalid school code"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Error validating school code: " + e.getMessage()));
+        }
+    }
 
     /**
      * Register a new school

@@ -47,4 +47,28 @@ public class AuthController {
         LoginResponseDTO response = authService.refreshToken(token);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = authService.changePassword(
+            request.get("mobileNumber"),
+            request.get("newPassword")
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = authService.forgotPassword(request.get("mobileNumber"));
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<Map<String, Object>> verifyResetOTP(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = authService.verifyResetOTP(
+            request.get("mobileNumber"),
+            request.get("otp")
+        );
+        return ResponseEntity.ok(response);
+    }
 }

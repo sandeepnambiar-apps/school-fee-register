@@ -1,372 +1,117 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/permissions.dart';
-import '../services/api_service.dart';
+import '../providers/auth_provider.dart';
 
 class UserManagementProvider extends ChangeNotifier {
-  static const String _usersKey = 'users_data';
-  static const String _currentUserKey = 'current_user_data';
-
+  final AuthProvider _authProvider;
+  
   List<User> _users = [];
-  User? _currentUser;
+  List<User> _filteredUsers = [];
   bool _isLoading = false;
   String? _error;
-  List<User> _filteredUsers = [];
 
-  late final ApiService _apiService;
+  UserManagementProvider(this._authProvider);
 
   // Getters
   List<User> get users => _users;
   List<User> get filteredUsers => _filteredUsers;
-  User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get hasUsers => _users.isNotEmpty;
 
-  UserManagementProvider() {
-    _initializeServices();
-    _loadData();
-  }
+  // Initialize with mock data
+  Future<void> refreshData() async {
+    _setLoading(true);
+    _clearError();
 
-  void _initializeServices() {
-    _apiService = ApiService();
-    _apiService.initialize();
-  }
-
-  // Load data from SharedPreferences
-  Future<void> _loadData() async {
     try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      final prefs = await SharedPreferences.getInstance();
+      // Simulate API call delay
+      await Future.delayed(const Duration(seconds: 1));
       
-      // Load users from local storage
-      final usersJson = prefs.getStringList(_usersKey) ?? [];
-      _users = usersJson
-          .map((json) => User.fromJson(Map<String, dynamic>.from(
-              Map.fromEntries(json.split(',').map((e) {
-                final parts = e.split(':');
-                return MapEntry(parts[0], parts.sublist(1).join(':'));
-              }))
-          )))
-          .toList();
+      // Load mock users
+      _loadMockUsers();
       
-      // Load current user
-      final currentUserJson = prefs.getString(_currentUserKey);
-      if (currentUserJson != null) {
-        _currentUser = User.fromJson(Map<String, dynamic>.from(
-            Map.fromEntries(currentUserJson.split(',').map((e) {
-              final parts = e.split(':');
-              return MapEntry(parts[0], parts.sublist(1).join(':'));
-            }))
-        ));
-      }
-
-      // If no users exist, create demo users
-      if (_users.isEmpty) {
-        await _createDemoUsers();
-      }
-
-      _filteredUsers = List.from(_users);
-      _isLoading = false;
-      notifyListeners();
+      // Apply current filters
+      _applyCurrentFilters();
     } catch (e) {
-      _error = 'Failed to load user data: $e';
-      _isLoading = false;
-      notifyListeners();
+      _setError('Failed to load users: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Save data to SharedPreferences
-  Future<void> _saveData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Save users
-      final usersJson = _users.map((user) {
-        final json = user.toJson();
-        return json.entries.map((e) => '${e.key}:${e.value}').join(',');
-      }).toList();
-      await prefs.setStringList(_usersKey, usersJson);
-      
-      // Save current user
-      if (_currentUser != null) {
-        final currentUserJson = _currentUser!.toJson();
-        final jsonString = currentUserJson.entries.map((e) => '${e.key}:${e.value}').join(',');
-        await prefs.setString(_currentUserKey, jsonString);
-      }
-    } catch (e) {
-      _error = 'Failed to save user data: $e';
-      notifyListeners();
-    }
-  }
-
-  // Create demo users for testing
-  Future<void> _createDemoUsers() async {
-    final demoUsers = [
+  void _loadMockUsers() {
+    _users = [
       User(
         id: '1',
+        mobileNumber: '9999999999',
+        fullName: 'App Developer',
         username: 'superadmin',
-        fullName: 'Super Administrator',
-        email: 'superadmin@kidsy.com',
-        phone: '+1-555-0001',
-        role: 'Super Admin',
-        schoolId: null, // Super Admin can access all schools
+        email: 'developer@kidsy.com',
+        role: 'SUPER_ADMIN',
+        schoolId: null,
         status: 'ACTIVE',
-        createdAt: DateTime.now(),
-        permissions: RolePermissions.getPermissionsForRole('Super Admin'),
+        isActive: true,
+        isFirstTime: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
       ),
       User(
         id: '2',
-        username: 'admin001',
-        fullName: 'School Administrator',
-        email: 'admin001@school.com',
-        phone: '+1-555-0002',
-        role: 'School Admin',
-        schoolId: '1', // BOON E.M School
+        mobileNumber: '1111111111',
+        fullName: 'School 1 Admin',
+        username: 'admin1',
+        email: 'admin1@school.com',
+        role: 'SCHOOL_ADMIN',
+        schoolId: '1',
         status: 'ACTIVE',
-        createdAt: DateTime.now(),
-        permissions: RolePermissions.getPermissionsForRole('School Admin'),
+        isActive: true,
+        isFirstTime: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 25)),
       ),
       User(
         id: '3',
-        username: 'T001',
-        fullName: 'Class Teacher',
-        email: 'teacher@school.com',
-        phone: '+1-555-0003',
-        role: 'Teacher',
-        schoolId: '1', // BOON E.M School
+        mobileNumber: '3333333333',
+        fullName: 'John Teacher',
+        username: 'teacher1',
+        email: 'john.teacher@school.com',
+        role: 'TEACHER',
+        schoolId: '1',
+        classAssigned: '10A',
+        subjectTaught: 'Mathematics',
         status: 'ACTIVE',
-        createdAt: DateTime.now(),
-        department: 'Mathematics',
-        subject: 'Mathematics',
-        permissions: RolePermissions.getPermissionsForRole('Teacher'),
+        isActive: true,
+        isFirstTime: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 20)),
       ),
       User(
         id: '4',
-        username: 'P001',
-        fullName: 'Parent User',
-        email: 'parent@home.com',
-        phone: '+1-555-0004',
-        role: 'Parent',
-        schoolId: '1', // BOON E.M School
+        mobileNumber: '6666666666',
+        fullName: 'David Parent',
+        username: 'parent1',
+        email: 'david.parent@email.com',
+        role: 'PARENT',
+        schoolId: '1',
         status: 'ACTIVE',
-        createdAt: DateTime.now(),
-        kidId: '1',
-        permissions: RolePermissions.getPermissionsForRole('Parent'),
+        isActive: true,
+        isFirstTime: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 15)),
+      ),
+      User(
+        id: '5',
+        mobileNumber: '2222222222',
+        fullName: 'School 2 Admin',
+        username: 'admin2',
+        email: 'admin2@school.com',
+        role: 'SCHOOL_ADMIN',
+        schoolId: '2',
+        status: 'ACTIVE',
+        isActive: true,
+        isFirstTime: false,
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
       ),
     ];
-
-    _users = demoUsers;
-    await _saveData();
   }
 
-  // Create new user
-  Future<bool> createUser({
-    required String username,
-    required String password,
-    required String fullName,
-    required String email,
-    required String phone,
-    required String role,
-    String? schoolId,
-    String? department,
-    String? subject,
-    String? kidId,
-  }) async {
-    try {
-      // Check if username already exists
-      if (_users.any((user) => user.username == username)) {
-        _error = 'Username already exists';
-        notifyListeners();
-        return false;
-      }
-
-      // Check if email already exists
-      if (_users.any((user) => user.email == email)) {
-        _error = 'Email already exists';
-        notifyListeners();
-        return false;
-      }
-
-      // Create new user
-      final newUser = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        username: username,
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        role: role,
-        schoolId: schoolId,
-        status: 'ACTIVE',
-        createdAt: DateTime.now(),
-        department: department,
-        subject: subject,
-        kidId: kidId,
-        permissions: RolePermissions.getPermissionsForRole(role),
-      );
-
-      _users.add(newUser);
-      _filteredUsers = List.from(_users);
-      await _saveData();
-      
-      _error = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = 'Failed to create user: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Update existing user
-  Future<bool> updateUser(String userId, {
-    String? fullName,
-    String? email,
-    String? phone,
-    String? role,
-    String? schoolId,
-    String? status,
-    String? department,
-    String? subject,
-    String? kidId,
-  }) async {
-    try {
-      final userIndex = _users.indexWhere((user) => user.id == userId);
-      if (userIndex == -1) {
-        _error = 'User not found';
-        notifyListeners();
-        return false;
-      }
-
-      final updatedUser = _users[userIndex].copyWith(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        role: role,
-        schoolId: schoolId,
-        status: status,
-        department: department,
-        subject: subject,
-        kidId: kidId,
-        permissions: role != null ? RolePermissions.getPermissionsForRole(role) : null,
-      );
-
-      _users[userIndex] = updatedUser;
-      
-      // Update current user if it's the one being updated
-      if (_currentUser?.id == userId) {
-        _currentUser = updatedUser;
-      }
-      
-      _filteredUsers = List.from(_users);
-      await _saveData();
-      
-      _error = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = 'Failed to update user: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Delete user
-  Future<bool> deleteUser(String userId) async {
-    try {
-      // Don't allow deletion of current user
-      if (_currentUser?.id == userId) {
-        _error = 'Cannot delete current user';
-        notifyListeners();
-        return false;
-      }
-
-      _users.removeWhere((user) => user.id == userId);
-      _filteredUsers = List.from(_users);
-      await _saveData();
-      
-      _error = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = 'Failed to delete user: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Change user status
-  Future<bool> changeUserStatus(String userId, String newStatus) async {
-    try {
-      final userIndex = _users.indexWhere((user) => user.id == userId);
-      if (userIndex == -1) {
-        _error = 'User not found';
-        notifyListeners();
-        return false;
-      }
-
-      final updatedUser = _users[userIndex].copyWith(status: newStatus);
-      _users[userIndex] = updatedUser;
-      
-      // Update current user if it's the one being updated
-      if (_currentUser?.id == userId) {
-        _currentUser = updatedUser;
-      }
-      
-      _filteredUsers = List.from(_users);
-      await _saveData();
-      
-      _error = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = 'Failed to change user status: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Change user role
-  Future<bool> changeUserRole(String userId, String newRole) async {
-    try {
-      final userIndex = _users.indexWhere((user) => user.id == userId);
-      if (userIndex == -1) {
-        _error = 'User not found';
-        notifyListeners();
-        return false;
-      }
-
-      final updatedUser = _users[userIndex].copyWith(
-        role: newRole,
-        permissions: RolePermissions.getPermissionsForRole(newRole),
-      );
-
-      _users[userIndex] = updatedUser;
-      
-      // Update current user if it's the one being updated
-      if (_currentUser?.id == userId) {
-        _currentUser = updatedUser;
-      }
-      
-      _filteredUsers = List.from(_users);
-      await _saveData();
-      
-      _error = null;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _error = 'Failed to change user role: $e';
-      notifyListeners();
-      return false;
-    }
-  }
-
-  // Filter users by various criteria
   void filterUsers({
     String? searchQuery,
     String? role,
@@ -374,96 +119,143 @@ class UserManagementProvider extends ChangeNotifier {
     String? status,
   }) {
     _filteredUsers = _users.where((user) {
-      bool matchesSearch = true;
-      bool matchesRole = true;
-      bool matchesSchool = true;
-      bool matchesStatus = true;
-
-      // Search query filter
+      // Search filter
       if (searchQuery != null && searchQuery.isNotEmpty) {
         final query = searchQuery.toLowerCase();
-        matchesSearch = user.fullName.toLowerCase().contains(query) ||
-                       user.username.toLowerCase().contains(query) ||
-                       user.email.toLowerCase().contains(query);
+        if (!user.fullName.toLowerCase().contains(query) &&
+            !user.username.toLowerCase().contains(query) &&
+            !user.email.toLowerCase().contains(query) &&
+            !user.mobileNumber.contains(query)) {
+          return false;
+        }
       }
 
       // Role filter
-      if (role != null && role.isNotEmpty) {
-        matchesRole = user.role == role;
+      if (role != null && role.isNotEmpty && user.role != role) {
+        return false;
       }
 
       // School filter
-      if (schoolId != null && schoolId.isNotEmpty) {
-        matchesSchool = user.schoolId == schoolId;
+      if (schoolId != null && schoolId.isNotEmpty && user.schoolId != schoolId) {
+        return false;
       }
 
       // Status filter
-      if (status != null && status.isNotEmpty) {
-        matchesStatus = user.status == status;
+      if (status != null && status.isNotEmpty && user.status != status) {
+        return false;
       }
 
-      return matchesSearch && matchesRole && matchesSchool && matchesStatus;
+      return true;
     }).toList();
 
     notifyListeners();
   }
 
-  // Get users by school
-  List<User> getUsersBySchool(String schoolId) {
-    return _users.where((user) => user.schoolId == schoolId).toList();
+  void _applyCurrentFilters() {
+    // Apply any existing filters
+    filterUsers();
   }
 
-  // Get users by role
-  List<User> getUsersByRole(String role) {
-    return _users.where((user) => user.role == role).toList();
+  // Permission checking
+  bool currentUserHasPermission(Permission permission) {
+    final currentUser = _authProvider.user;
+    if (currentUser == null) return false;
+    
+    final userRole = currentUser['role'] as String?;
+    if (userRole == null) return false;
+    
+    return RolePermissions.hasPermission(userRole, permission);
   }
 
-  // Get user by ID
-  User? getUserById(String userId) {
+  // User management operations
+  Future<bool> deleteUser(String userId) async {
     try {
-      return _users.firstWhere((user) => user.id == userId);
+      _setLoading(true);
+      _clearError();
+
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Remove from local list
+      _users.removeWhere((user) => user.id == userId);
+      _applyCurrentFilters();
+
+      return true;
     } catch (e) {
-      return null;
+      _setError('Failed to delete user: $e');
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Get user by username
-  User? getUserByUsername(String username) {
+  Future<bool> changeUserStatus(String userId, String newStatus) async {
     try {
-      return _users.firstWhere((user) => user.username == username);
+      _setLoading(true);
+      _clearError();
+
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Update local list
+      final userIndex = _users.indexWhere((user) => user.id == userId);
+      if (userIndex != -1) {
+        _users[userIndex] = _users[userIndex].copyWith(
+          status: newStatus,
+          updatedAt: DateTime.now(),
+        );
+        _applyCurrentFilters();
+      }
+
+      return true;
     } catch (e) {
-      return null;
+      _setError('Failed to change user status: $e');
+      return false;
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Check if user has permission
-  bool hasPermission(String userId, String permission) {
-    final user = getUserById(userId);
-    if (user == null) return false;
-    return user.permissions.contains(permission);
+  Future<bool> changeUserRole(String userId, String newRole) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Update local list
+      final userIndex = _users.indexWhere((user) => user.id == userId);
+      if (userIndex != -1) {
+        _users[userIndex] = _users[userIndex].copyWith(
+          role: newRole,
+          updatedAt: DateTime.now(),
+        );
+        _applyCurrentFilters();
+      }
+
+      return true;
+    } catch (e) {
+      _setError('Failed to change user role: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 
-  // Check if current user has permission
-  bool currentUserHasPermission(String permission) {
-    if (_currentUser == null) return false;
-    return _currentUser!.permissions.contains(permission);
-  }
-
-  // Clear error
-  void clearError() {
-    _error = null;
+  // Helper methods
+  void _setLoading(bool loading) {
+    _isLoading = loading;
     notifyListeners();
   }
 
-  // Refresh data
-  Future<void> refreshData() async {
-    await _loadData();
+  void _setError(String error) {
+    _error = error;
+    notifyListeners();
   }
 
-  // Reset to demo data
-  Future<void> resetToDemoData() async {
-    _users.clear();
-    _filteredUsers.clear();
-    await _createDemoUsers();
+  void _clearError() {
+    _error = null;
+    notifyListeners();
   }
 }

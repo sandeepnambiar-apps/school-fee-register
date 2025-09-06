@@ -7,6 +7,7 @@ import com.school.entity.School;
 import com.school.repository.StudentRepository;
 import com.school.repository.SchoolRepository;
 import com.school.service.StudentService;
+import com.school.util.SchoolContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class StudentServiceImpl implements StudentService {
     
     @Autowired
     private SchoolRepository schoolRepository;
+    
+    @Autowired
+    private SchoolContextUtil schoolContextUtil;
     
     @Override
     public void initializeDefaultStudents() {
@@ -81,26 +85,52 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public List<StudentDTO> getAllStudents(Long schoolId) {
-        if (schoolId == null) {
-            // If no schoolId provided, return all active students
-            return studentRepository.findByIsActiveTrue()
-                    .stream()
-                    .map(this::convertToDTO)
-                    .collect(Collectors.toList());
+        // Auto-apply school filtering from JWT if not provided
+        Long effectiveSchoolId = schoolId;
+        if (effectiveSchoolId == null) {
+            effectiveSchoolId = schoolContextUtil.getCurrentSchoolId();
         }
-        return studentRepository.findBySchool_IdAndIsActiveTrue(schoolId)
+        
+        // Super Admin can see all students, others are filtered by school
+        if (schoolContextUtil.isSuperAdmin()) {
+            return studentRepository.findByIsActiveTrue()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        }
+        
+        if (effectiveSchoolId == null) {
+            throw new RuntimeException("School ID is required for non-Super Admin users");
+        }
+        
+        return studentRepository.findBySchool_IdAndIsActiveTrue(effectiveSchoolId)
+            .stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
 
     @Override
     public StudentDTO getStudentById(Long id, Long schoolId) {
+        // Auto-apply school filtering from JWT if not provided
+        Long effectiveSchoolId = schoolId;
+        if (effectiveSchoolId == null) {
+            effectiveSchoolId = schoolContextUtil.getCurrentSchoolId();
+        }
+        
         Optional<Student> studentOpt = studentRepository.findById(id);
-        if (studentOpt.isEmpty() || !schoolId.equals(studentOpt.get().getSchool().getId())) {
+        if (studentOpt.isEmpty()) {
             throw new RuntimeException("Student not found with ID: " + id);
         }
-        return convertToDTO(studentOpt.get());
+        
+        Student student = studentOpt.get();
+        
+        // Super Admin can access any student, others must be from their school
+        if (!schoolContextUtil.isSuperAdmin() && 
+            (effectiveSchoolId == null || !effectiveSchoolId.equals(student.getSchool().getId()))) {
+            throw new RuntimeException("Access denied: Student not in your school");
+        }
+        
+        return convertToDTO(student);
     }
 
     @Override

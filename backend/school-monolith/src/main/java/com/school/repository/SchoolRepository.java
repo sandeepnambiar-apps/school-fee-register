@@ -12,9 +12,13 @@ public interface SchoolRepository extends JpaRepository<School, Long> {
     
     Optional<School> findByName(String name);
     
+    Optional<School> findBySchoolCode(String schoolCode);
+    
     List<School> findByIsActiveTrue();
     
     boolean existsByName(String name);
+    
+    boolean existsBySchoolCode(String schoolCode);
 }
 
 

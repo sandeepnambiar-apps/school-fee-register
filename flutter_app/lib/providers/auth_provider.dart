@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final _secureStorage = const FlutterSecureStorage();
   
   Map<String, dynamic>? _user;
   String? _error;
@@ -109,47 +111,6 @@ class AuthProvider extends ChangeNotifier {
     return await _authService.getAccessibleSchools();
   }
 
-  // Change password
-  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _authService.changePassword(currentPassword, newPassword);
-      
-      if (!result['success']) {
-        _setError(result['message']);
-      }
-      
-      return result;
-    } catch (e) {
-      _setError('Password change failed: $e');
-      return {'success': false, 'message': 'Password change failed: $e'};
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Forgot password
-  Future<Map<String, dynamic>> forgotPassword(String mobileNumber) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final result = await _authService.forgotPassword(mobileNumber);
-      
-      if (!result['success']) {
-        _setError(result['message']);
-      }
-      
-      return result;
-    } catch (e) {
-      _setError('Password reset failed: $e');
-      return {'success': false, 'message': 'Password reset failed: $e'};
-    } finally {
-      _setLoading(false);
-    }
-  }
 
   // Helper methods
   void _setLoading(bool loading) {
@@ -198,6 +159,76 @@ class AuthProvider extends ChangeNotifier {
 
   // Get user's mobile number
   String? get userMobile => _user?['mobileNumber'];
+
+  // Store user data after login
+  Future<void> storeUserData(Map<String, dynamic> userData) async {
+    _user = userData;
+    await _secureStorage.write(key: 'user_data', value: userData.toString());
+    notifyListeners();
+  }
+
+  // Change password
+  Future<Map<String, dynamic>> changePassword(String mobileNumber, String newPassword) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.changePassword(mobileNumber, newPassword);
+      
+      if (!result['success']) {
+        _setError(result['message']);
+      }
+      
+      return result;
+    } catch (e) {
+      _setError('Password change failed: $e');
+      return {'success': false, 'message': 'Password change failed: $e'};
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Forgot password
+  Future<Map<String, dynamic>> forgotPassword(String mobileNumber) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.forgotPassword(mobileNumber);
+      
+      if (!result['success']) {
+        _setError(result['message']);
+      }
+      
+      return result;
+    } catch (e) {
+      _setError('Password reset failed: $e');
+      return {'success': false, 'message': 'Password reset failed: $e'};
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Verify reset OTP
+  Future<Map<String, dynamic>> verifyResetOTP(String mobileNumber, String otp) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final result = await _authService.verifyResetOTP(mobileNumber, otp);
+      
+      if (!result['success']) {
+        _setError(result['message']);
+      }
+      
+      return result;
+    } catch (e) {
+      _setError('OTP verification failed: $e');
+      return {'success': false, 'message': 'OTP verification failed: $e'};
+    } finally {
+      _setLoading(false);
+    }
+  }
 }
 
 

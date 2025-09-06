@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -107,6 +108,105 @@ class ApiService {
     } else {
       throw Exception('HTTP Error: ${response.statusCode} - ${response.statusMessage}');
     }
+  }
+
+  // Authentication endpoints
+  Future<Map<String, dynamic>> login(String mobileNumber, String password) async {
+    try {
+      final response = await post('/api/auth/login', data: {
+        'mobileNumber': mobileNumber,
+        'password': password,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('Login failed: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> unifiedLogin(String mobileNumber, String password) async {
+    try {
+      final response = await post('/api/auth/unified-login', data: {
+        'mobileNumber': mobileNumber,
+        'password': password,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('Unified login failed: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> changePassword(String mobileNumber, String newPassword) async {
+    try {
+      final response = await post('/api/auth/change-password', data: {
+        'mobileNumber': mobileNumber,
+        'newPassword': newPassword,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('Password change failed: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String mobileNumber) async {
+    try {
+      final response = await post('/api/auth/forgot-password', data: {
+        'mobileNumber': mobileNumber,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('Password reset failed: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyResetOTP(String mobileNumber, String otp) async {
+    try {
+      final response = await post('/api/auth/verify-reset-otp', data: {
+        'mobileNumber': mobileNumber,
+        'otp': otp,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('OTP verification failed: $e');
+    }
+  }
+
+  // School Code Validation
+  Future<Map<String, dynamic>> validateSchoolCode(String schoolCode) async {
+    try {
+      final response = await post('/api/schools/validate-code', data: {
+        'schoolCode': schoolCode,
+      });
+      return parseResponse(response);
+    } catch (e) {
+      throw Exception('School code validation failed: $e');
+    }
+  }
+
+  // Store school code in local storage
+  Future<void> storeSchoolCode(String schoolCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('school_code', schoolCode);
+    await prefs.setBool('school_code_verified', true);
+    print('Stored school code: $schoolCode');
+  }
+
+  // Check if school code is already verified
+  Future<bool> isSchoolCodeVerified() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('school_code_verified') ?? false;
+  }
+
+  // Get stored school code
+  Future<String?> getStoredSchoolCode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('school_code');
+  }
+
+  // Clear school code (for testing/reset)
+  Future<void> clearSchoolCode() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('school_code');
+    await prefs.remove('school_code_verified');
   }
 }
 

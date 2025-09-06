@@ -20,6 +20,9 @@ public class School {
     @Column(nullable = false, unique = true)
     private String name;
     
+    @Column(name = "school_code", nullable = false, unique = true, length = 10)
+    private String schoolCode;
+    
     @Column(nullable = false)
     private String address;
     

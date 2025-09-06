@@ -6,7 +6,6 @@ import com.school.dto.UserDTO;
 import com.school.entity.School;
 import com.school.repository.SchoolRepository;
 import com.school.service.SchoolService;
-import com.school.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +19,35 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Autowired
     private SchoolRepository schoolRepository;
-    
-    @Autowired
-    private AuthService authService;
 
     @Override
     public void initializeDefaultSchools() {
+        // Always update school codes for existing schools
+        List<School> existingSchools = schoolRepository.findAll();
+        boolean updated = false;
+        
+        for (School school : existingSchools) {
+            if (school.getName().equals("Demo School") && !school.getSchoolCode().equals("DEMO001")) {
+                school.setSchoolCode("DEMO001");
+                schoolRepository.save(school);
+                updated = true;
+            } else if (school.getName().equals("Sample Academy") && !school.getSchoolCode().equals("SAMP001")) {
+                school.setSchoolCode("SAMP001");
+                schoolRepository.save(school);
+                updated = true;
+            }
+        }
+        
+        if (updated) {
+            System.out.println("Updated existing schools with proper school codes");
+        }
+        
         // Check if schools already exist
         if (schoolRepository.count() == 0) {
             // Demo School
             School demoSchool = new School();
             demoSchool.setName("Demo School");
+            demoSchool.setSchoolCode("DEMO001");
             demoSchool.setAddress("123 Education Street");
             demoSchool.setPhone("+1-555-0123");
             demoSchool.setEmail("info@demoschool.com");
@@ -46,6 +63,7 @@ public class SchoolServiceImpl implements SchoolService {
             // Sample School
             School sampleSchool = new School();
             sampleSchool.setName("Sample Academy");
+            sampleSchool.setSchoolCode("SAMP001");
             sampleSchool.setAddress("456 Learning Avenue");
             sampleSchool.setPhone("+1-555-0456");
             sampleSchool.setEmail("info@sampleacademy.com");
@@ -186,5 +204,14 @@ public class SchoolServiceImpl implements SchoolService {
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         }
+    }
+
+    @Override
+    public boolean validateSchoolCode(String schoolCode) {
+        // Temporary: Accept demo codes for testing
+        if ("DEMO001".equals(schoolCode) || "SAMP001".equals(schoolCode)) {
+            return true;
+        }
+        return schoolRepository.existsBySchoolCode(schoolCode);
     }
 }

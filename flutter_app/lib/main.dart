@@ -11,9 +11,13 @@ import 'providers/timetable_provider.dart';
 import 'providers/school_config_provider.dart';
 import 'providers/multi_school_provider.dart';
 import 'providers/user_management_provider.dart';
+import 'services/api_service.dart';
 import 'providers/bus_tracking_provider.dart';
 import 'providers/parent_provider.dart';
+import 'screens/auth/school_code_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/create_password_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/students/students_screen.dart';
 import 'screens/fees/fees_screen.dart';
@@ -33,6 +37,8 @@ import 'screens/parent/parent_registration_screen.dart';
 import 'screens/teacher/my_classes_screen.dart';
 
 void main() {
+  // Initialize API service
+  ApiService().initialize();
   runApp(const MyApp());
 }
 
@@ -51,7 +57,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => TimetableProvider()),
         ChangeNotifierProvider(create: (_) => SchoolConfigProvider()),
-        ChangeNotifierProvider(create: (_) => UserManagementProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, UserManagementProvider>(
+          create: (context) => UserManagementProvider(context.read<AuthProvider>()),
+          update: (context, authProvider, previous) => 
+            previous ?? UserManagementProvider(authProvider),
+        ),
         ChangeNotifierProvider(create: (_) => BusTrackingProvider()),
         ChangeNotifierProvider(create: (_) => ParentProvider()),
       ],
@@ -84,13 +94,82 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class AppInitializer extends StatefulWidget {
+  const AppInitializer({super.key});
+
+  @override
+  State<AppInitializer> createState() => _AppInitializerState();
+}
+
+class _AppInitializerState extends State<AppInitializer> {
+  @override
+  void initState() {
+    super.initState();
+    _checkSchoolCodeStatus();
+  }
+
+  Future<void> _checkSchoolCodeStatus() async {
+    final apiService = ApiService();
+    final isVerified = await apiService.isSchoolCodeVerified();
+    
+    if (mounted) {
+      if (isVerified) {
+        // School code already verified, go to login
+        context.go('/login');
+      } else {
+        // First time, show school code screen
+        context.go('/school-code');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Initializing app...'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final _router = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const AppInitializer(),
+        ),
+        GoRoute(
+          path: '/school-code',
+          builder: (context, state) => const SchoolCodeScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/create-password',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return CreatePasswordScreen(
+              mobileNumber: extra?['mobileNumber'] ?? '',
+              isPasswordReset: extra?['isPasswordReset'] ?? false,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/forgot-password',
+          builder: (context, state) => const ForgotPasswordScreen(),
+        ),
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardScreen(),
@@ -158,10 +237,6 @@ final _router = GoRouter(
             GoRoute(
           path: '/my-classes',
           builder: (context, state) => const MyClassesScreen(),
-        ),
-        GoRoute(
-          path: '/user-management',
-          builder: (context, state) => const UserManagementScreen(),
         ),
   ],
 );

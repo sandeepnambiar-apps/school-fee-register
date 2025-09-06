@@ -14,5 +14,6 @@ public class LoginResponseDTO {
     private Long schoolId;
     private String message;
     private boolean success;
+    private boolean requiresPasswordChange; // New field for password change requirement
     private Map<String, Object> user; // New field for unified user data
 }

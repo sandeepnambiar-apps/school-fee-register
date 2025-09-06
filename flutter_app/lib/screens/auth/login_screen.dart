@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/school_logo.dart';
+import '../../services/api_service.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,6 +20,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  String? _currentSchoolCode;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchoolCode();
+  }
+
+  Future<void> _loadSchoolCode() async {
+    final apiService = ApiService();
+    final schoolCode = await apiService.getStoredSchoolCode();
+    setState(() {
+      _currentSchoolCode = schoolCode;
+    });
+  }
 
   @override
   void dispose() {
@@ -46,7 +62,40 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: SchoolLogo(size: 120),
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                
+                // Current School Code Display
+                if (_currentSchoolCode != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.school,
+                          size: 16,
+                          color: Colors.blue.shade600,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'School: $_currentSchoolCode',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
+                const SizedBox(height: 16),
                 
                 // Welcome Text
                 Text(
@@ -162,12 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please contact your school administrator to reset your password.'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
+                            context.go('/forgot-password');
                           },
                           child: Text(
                             'Forgot Password?',
@@ -223,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _buildDemoCredential('8888888888', 'School 2 Parent'),
                       const SizedBox(height: 8),
                       Text(
-                        'Password: Any password (e.g., "password")',
+                        'Password: Welcome@123 (Default password for all users)',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.orange[700],
@@ -285,24 +329,35 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authProvider = context.read<AuthProvider>();
       
-      // Use mock login for development
-      final result = await authProvider.loginMock(
-        _mobileController.text,
+      // Use real API login
+      final result = await authProvider.login(
+        _mobileController.text.trim(),
         _passwordController.text,
       );
 
-      if (result['success'] && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.go('/dashboard');
+      if (result['success'] == true && mounted) {
+        // Check if password change is required
+        if (result['requiresPasswordChange'] == true) {
+          // Navigate to password creation screen
+          context.go('/create-password', extra: {
+            'mobileNumber': _mobileController.text.trim(),
+            'isPasswordReset': false,
+          });
+        } else {
+          // Store user data and navigate to dashboard
+          await authProvider.storeUserData(result['user']);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Login successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.go('/dashboard');
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message']),
+            content: Text(result['message'] ?? 'Login failed'),
             backgroundColor: Colors.red,
           ),
         );

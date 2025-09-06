@@ -18,4 +18,11 @@ public interface AuthService {
     boolean validateToken(String token);
 
     LoginResponseDTO refreshToken(String token);
+
+    // Password management methods
+    Map<String, Object> changePassword(String mobileNumber, String newPassword);
+
+    Map<String, Object> forgotPassword(String mobileNumber);
+
+    Map<String, Object> verifyResetOTP(String mobileNumber, String otp);
 }

@@ -56,4 +56,9 @@ public interface SchoolService {
      * Initialize default schools (for development/testing)
      */
     void initializeDefaultSchools();
+    
+    /**
+     * Validate school code
+     */
+    boolean validateSchoolCode(String schoolCode);
 }
