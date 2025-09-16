@@ -6,6 +6,9 @@ import '../../models/fee_payment.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'fee_overview_screen.dart';
+import 'transaction_summary_screen.dart';
+import 'fee_details_screen.dart';
 
 class FeesScreen extends StatefulWidget {
   const FeesScreen({super.key});
@@ -36,18 +39,28 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      floatingActionButton: _buildFloatingActionButton(),
-      appBar: AppBar(
-        title: const Text('Fees Management'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        final role = auth.user?['role'] ?? 'Super Admin';
+        
+        // For parents, redirect to the new comprehensive fee overview
+        if (role == 'PARENT') {
+          return const FeeOverviewScreen();
+        }
+        
+        // For admins/staff, show the original management interface
+        return Scaffold(
+          backgroundColor: const Color(0xFFF5F5F5),
+          floatingActionButton: _buildFloatingActionButton(),
+          appBar: AppBar(
+            title: const Text('Fees Management'),
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go('/dashboard'),
+            ),
         actions: [
           // Kidsy Branding in App Bar
           Container(
@@ -127,6 +140,8 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
+    );
+      },
     );
   }
 

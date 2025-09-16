@@ -47,14 +47,27 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+      body: Container(
+        decoration: _currentSchoolCode == 'BOON' 
+          ? BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/school-pic.jpg'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.3),
+                  BlendMode.darken,
+                ),
+              ),
+            )
+          : null,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 const SizedBox(height: 40),
                 
                 // School Logo
@@ -62,47 +75,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: SchoolLogo(size: 120),
                 ),
                 
-                const SizedBox(height: 16),
-                
-                // Current School Code Display
-                if (_currentSchoolCode != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    margin: const EdgeInsets.symmetric(horizontal: 40),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.school,
-                          size: 16,
-                          color: Colors.blue.shade600,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'School: $_currentSchoolCode',
-                          style: TextStyle(
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 
                 // Welcome Text
                 Text(
-                  'Welcome to Kidsy',
+                  _currentSchoolCode == 'BOON' ? 'Boon E.M School' : 'Welcome to Kidsy',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
+                    color: _currentSchoolCode == 'BOON' ? Colors.white : Colors.blue[700],
+                    shadows: _currentSchoolCode == 'BOON' ? [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 3,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ] : null,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -112,7 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   'School Management System',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[600],
+                    color: _currentSchoolCode == 'BOON' ? Colors.white : Colors.grey[600],
+                    shadows: _currentSchoolCode == 'BOON' ? [
+                      Shadow(
+                        offset: const Offset(1, 1),
+                        blurRadius: 3,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ] : null,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -291,6 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

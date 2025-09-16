@@ -10,7 +10,6 @@ import '../../widgets/common/announcements_card_image.dart';
 import '../../widgets/common/calendar_card_image.dart';
 import '../../widgets/common/marks_card_image.dart';
 import '../../widgets/common/static_reports_icon.dart';
-import '../../widgets/common/static_user_management_icon.dart';
 import '../../widgets/common/timetable_card_image.dart';
 import '../../widgets/common/talk_to_us_card_image.dart';
 import '../../widgets/common/track_bus_card_image.dart';
@@ -576,17 +575,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    // Add User Management for Super Admin and School Admin
-    if (userRole == 'SUPER_ADMIN' || userRole == 'SCHOOL_ADMIN') {
-      cards.add(
-        _buildNavigationCardWithWidget(
-          title: 'User Management',
-          icon: const StaticUserManagementIcon(),
-          color: Colors.blue[600]!,
-          onTap: () => context.go('/user-management'),
-        ),
-      );
-    }
 
     return GridView.count(
       padding: const EdgeInsets.all(16),

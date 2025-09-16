@@ -89,6 +89,24 @@ class _TimetableScreenState extends State<TimetableScreen> {
           onPressed: () => context.go('/dashboard'),
         ),
         actions: [
+          // Add Timetable Button (for SuperAdmin, Admin, Teacher)
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final userRole = authProvider.user?['role'] ?? '';
+              if (userRole == 'Super Admin' || userRole == 'School Admin' || userRole == 'Teacher') {
+                return IconButton(
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  onPressed: () {
+                    setState(() {
+                      _showAddForm = !_showAddForm;
+                    });
+                  },
+                  tooltip: 'Add Timetable Entry',
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           // Kidsy Branding in App Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -265,6 +283,28 @@ class _TimetableScreenState extends State<TimetableScreen> {
             child: _buildTimetableContent(),
           ),
         ],
+      ),
+      // Floating Action Button for adding timetable entries
+      floatingActionButton: Consumer<AuthProvider>(
+        builder: (context, authProvider, child) {
+          final userRole = authProvider.user?['role'] ?? '';
+          if (userRole == 'Super Admin' || userRole == 'School Admin' || userRole == 'Teacher') {
+            return FloatingActionButton(
+              onPressed: () {
+                setState(() {
+                  _showAddForm = !_showAddForm;
+                });
+              },
+              backgroundColor: Colors.blue,
+              child: Icon(
+                _showAddForm ? Icons.close : Icons.add,
+                color: Colors.white,
+              ),
+              tooltip: _showAddForm ? 'Close Add Form' : 'Add Timetable Entry',
+            );
+          }
+          return const SizedBox.shrink();
+        },
       ),
     );
   }
@@ -714,14 +754,33 @@ class _TimetableScreenState extends State<TimetableScreen> {
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     final userRole = authProvider.user?['role'] ?? '';
-                    if (userRole == 'Teacher' || userRole == 'School Admin' || userRole == 'Super Admin') {
-                      return TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _showAddForm = true;
-                          });
-                        },
-                        child: const Text('Add First Entry'),
+                    if (userRole == 'Super Admin' || userRole == 'School Admin' || userRole == 'Teacher') {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _showAddForm = true;
+                              });
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add First Entry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Or use the + button in the top bar or floating action button',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
                       );
                     }
                     return const SizedBox.shrink();

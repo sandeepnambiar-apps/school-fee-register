@@ -13,7 +13,7 @@ class ApiService {
   Dio get dio => _dio;
   
   // Base URL for monolithic backend
-  static const String baseUrl = 'http://localhost:8080';
+  static const String baseUrl = 'http://172.20.48.1:8080';
 
   void initialize() {
     if (_isInitialized) return; // Prevent multiple initializations

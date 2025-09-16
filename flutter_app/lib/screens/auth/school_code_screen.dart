@@ -83,34 +83,34 @@ class _SchoolCodeScreenState extends State<SchoolCodeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 80),
                 
-                // School Logo/Icon
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(60),
-                    border: Border.all(color: Colors.blue.shade200, width: 2),
-                  ),
-                  child: Icon(
-                    Icons.school,
-                    size: 60,
-                    color: Colors.blue.shade600,
-                  ),
-                ),
-                
-                const SizedBox(height: 40),
-                
-                // Title
-                Text(
-                  'Welcome to School App',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                  textAlign: TextAlign.center,
+                // Title with Kidsy Branding
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome to Kid',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[600],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        'sy',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 
                 const SizedBox(height: 16),
@@ -240,7 +240,7 @@ class _SchoolCodeScreenState extends State<SchoolCodeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Demo School Codes:',
+                        'Available School Codes:',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Colors.blue.shade700,
@@ -248,7 +248,7 @@ class _SchoolCodeScreenState extends State<SchoolCodeScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'DEMO001 - Demo School\nSAMP001 - Sample Academy',
+                        'DEMO001 - Demo School\nSAMP001 - Sample Academy\nBOON - BOON School',
                         style: TextStyle(
                           color: Colors.blue.shade600,
                           fontSize: 12,

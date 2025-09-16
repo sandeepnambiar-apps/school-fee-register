@@ -10,7 +10,6 @@ import 'providers/notification_provider.dart';
 import 'providers/timetable_provider.dart';
 import 'providers/school_config_provider.dart';
 import 'providers/multi_school_provider.dart';
-import 'providers/user_management_provider.dart';
 import 'services/api_service.dart';
 import 'providers/bus_tracking_provider.dart';
 import 'providers/parent_provider.dart';
@@ -29,12 +28,15 @@ import 'screens/marks/marks_screen.dart';
 import 'screens/timetable/timetable_screen.dart';
 import 'screens/calendar/calendar_screen.dart';
 import 'screens/settings/school_config_screen.dart';
-import 'screens/user_management/user_management_screen.dart';
 import 'screens/bus_tracking/bus_tracking_screen.dart';
 import 'screens/bus_tracking/driver_location_screen.dart';
 import 'screens/parent/parent_login_screen.dart';
 import 'screens/parent/parent_registration_screen.dart';
 import 'screens/teacher/my_classes_screen.dart';
+import 'screens/fees/fee_overview_screen.dart';
+import 'screens/fees/transaction_summary_screen.dart';
+import 'screens/fees/fee_details_screen.dart';
+import 'screens/payment/payment_screen.dart';
 
 void main() {
   // Initialize API service
@@ -57,11 +59,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
         ChangeNotifierProvider(create: (_) => TimetableProvider()),
         ChangeNotifierProvider(create: (_) => SchoolConfigProvider()),
-        ChangeNotifierProxyProvider<AuthProvider, UserManagementProvider>(
-          create: (context) => UserManagementProvider(context.read<AuthProvider>()),
-          update: (context, authProvider, previous) => 
-            previous ?? UserManagementProvider(authProvider),
-        ),
         ChangeNotifierProvider(create: (_) => BusTrackingProvider()),
         ChangeNotifierProvider(create: (_) => ParentProvider()),
       ],
@@ -215,10 +212,6 @@ final _router = GoRouter(
       builder: (context, state) => const SchoolConfigScreen(),
     ),
     GoRoute(
-      path: '/user-management',
-      builder: (context, state) => const UserManagementScreen(),
-    ),
-    GoRoute(
       path: '/track-bus',
       builder: (context, state) => const BusTrackingScreen(),
     ),
@@ -237,6 +230,39 @@ final _router = GoRouter(
             GoRoute(
           path: '/my-classes',
           builder: (context, state) => const MyClassesScreen(),
+        ),
+        // Enhanced Fee Routes
+        GoRoute(
+          path: '/fees/overview',
+          builder: (context, state) => const FeeOverviewScreen(),
+        ),
+        GoRoute(
+          path: '/fees/summary',
+          builder: (context, state) => const TransactionSummaryScreen(),
+        ),
+        GoRoute(
+          path: '/fees/details',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return FeeDetailsScreen(
+              categoryName: extra?['categoryName'] ?? '',
+              fees: extra?['fees'] ?? [],
+            );
+          },
+        ),
+        GoRoute(
+          path: '/fees/history',
+          builder: (context, state) => const TransactionSummaryScreen(),
+        ),
+        GoRoute(
+          path: '/payment',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return PaymentScreen(
+              categoryName: extra?['categoryName'] ?? '',
+              amount: extra?['amount'] ?? 0.0,
+            );
+          },
         ),
   ],
 );
